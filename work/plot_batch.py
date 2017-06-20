@@ -1,5 +1,5 @@
 # automatically create pdf containing seperate images and merged images.
-# seperate images under ./plot_seperate
+# seperate images under ./plot_seperate_xt
 # merged under ./
 # shortage1: memory consuming(3.83G on my computer), but can be improved
 # shortage2: parallel not supported yet
