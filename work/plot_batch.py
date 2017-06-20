@@ -12,8 +12,8 @@ import os
 from PyPDF2 import PdfFileWriter, PdfFileReader
 #from matplotlib.backends.backend_pdf import PdfPages
 
-if not os.path.exists("plot_seperate"):
-	os.makedirs("plot_seperate")
+if not os.path.exists("plot_seperate_xt"):
+	os.makedirs("plot_seperate_xt")
 
 # Creating a routine that appends files to the output file
 def append_pdf(input,output):
@@ -41,7 +41,7 @@ for i in range(3000):
 	ax.set_xlabel('x')
 	ax.set_ylabel('t')
 	ax.set_zlabel('y')
-	ax.view_init(0, 90)
+	ax.view_init(-90, 0)
 	ax.set_title(i)
 	x = t_data[0]
 	y = t_data[1]
@@ -55,8 +55,8 @@ for i in range(3000):
 	ax.plot(x, t, y, label=plt_label)
 	ax.plot(x_target, t_target, y_target, label="target: "+str(ttarget[i][0])+", "+str(ttarget[i][1]))
 	ax.legend()
-	plt.savefig("./plot_seperate/"+str(i)+".pdf", bbox_inches='tight')
-	append_pdf(PdfFileReader(open("./plot_seperate/"+str(i)+".pdf","rb")),output)
+	plt.savefig("./plot_seperate_xt/"+str(i)+".pdf", bbox_inches='tight')
+	append_pdf(PdfFileReader(open("./plot_seperate_xt/"+str(i)+".pdf","rb")),output)
 
-output.write(open("plot_merged.pdf","wb"))
+output.write(open("plot_xt_merged.pdf","wb"))
 
