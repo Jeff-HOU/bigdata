@@ -91,13 +91,9 @@ def scale_one_data_1(d, param=[]):
 		return (d - param[0]) / (param[1] - param[2])
 
 def scale_data(tdata, ttarget, tlabel, sdata, starget):
-	#tdata_scaled, param = scale_one_data(tdata)
-	#ttarget_scaled = scale_one_data(ttarget, param)
 	tdata_scaled, param_1 = scale_one_data(tdata)
 	ttarget_scaled = scale_one_data(ttarget, param_1)
 	tlabel_scaled = scale_one_data(tlabel)
-	#sdata_scaled, param = scale_one_data(sdata)
-	#starget_scaled = scale_one_data(starget, param)
 	sdata_scaled, param_2 = scale_one_data_1(sdata)
 	starget_scaled = scale_one_data_1(starget, param_2)
 	return tdata_scaled, \
