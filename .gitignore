@@ -1,0 +1,8 @@
+
+*.pyc
+
+data/command.sh
+
+data/dsjtzs_txfz_test.txt
+
+work/functionsQ.py
