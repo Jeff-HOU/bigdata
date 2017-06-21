@@ -10,20 +10,20 @@ tfeature = np.zeros((3000, 13))
 #sfeature = np.zeros(100000, 11)
 
 # 0.(normalization)
-utdata, uttarget, utlabel, usdata, ustarget = get_training_and_testing_data()
-utdata_x = np.delete(utdata, [1, 2], axis=2)
-utdata_t = np.delete(utdata, [0, 1], axis=2)
-uttarget_x = np.delete(uttarget, [1], axis=1)
-usdata_x = np.delete(usdata, [1, 2], axis=2)
-usdata_t = np.delete(usdata, [0, 1], axis=2)
-ustarget_x = np.delete(ustarget, [1], axis=1)
-tdata, ttarget, tlabel, sdata, starget = scale_data(utdata, uttarget, utlabel, usdata, ustarget)
-tdata_x = np.delete(tdata, [1, 2], axis=2)
-tdata_t = np.delete(tdata, [0, 1], axis=2)
-ttarget_x = np.delete(ttarget, [1], axis=1)
-sdata_x = np.delete(sdata, [1, 2], axis=2)
-sdata_t = np.delete(sdata, [0, 1], axis=2)
-starget_x = np.delete(starget, [1], axis=1)
+utdata, uttarget, utlabel, usdata, ustarget = get_training_and_testing_data() # get unscaled training and testing data
+utdata_x = np.delete(utdata, [1, 2], axis=2)								  # track's x axis of unscaled training data
+utdata_t = np.delete(utdata, [0, 1], axis=2)								  # track's t axis of unscaled training data
+uttarget_x = np.delete(uttarget, [1], axis=1)								  # target's x axis of unscaled training data
+usdata_x = np.delete(usdata, [1, 2], axis=2)								  # track's x axis of unscaled testing data
+usdata_t = np.delete(usdata, [0, 1], axis=2)								  # track's t axis of unscaled testing data
+ustarget_x = np.delete(ustarget, [1], axis=1)								  # target's x axis of unscaled testing data
+tdata, ttarget, tlabel, sdata, starget = scale_data(utdata, uttarget, utlabel, usdata, ustarget) # scale the data
+tdata_x = np.delete(tdata, [1, 2], axis=2)									  # track's x axis of scaled training data
+tdata_t = np.delete(tdata, [0, 1], axis=2)									  # track's t axis of scaled training data
+ttarget_x = np.delete(ttarget, [1], axis=1)									  # target's x axis of scaled training data
+sdata_x = np.delete(sdata, [1, 2], axis=2)									  # track's x axis of scaled testing data
+sdata_t = np.delete(sdata, [0, 1], axis=2)									  # track's t axis of scaled testing data
+starget_x = np.delete(starget, [1], axis=1)									  # target's x axis of scaled testing data
 #-----------------------------------------
 # task_id index_in_tfeature. task_name  ||
 # |  _________|    ______________|      ||
