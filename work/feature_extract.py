@@ -1,7 +1,8 @@
 import numpy as np
 from functions import get_scaled_training_and_testing_data
 
-feature_file = "../data/feature.csv"
+tfeature_file = "../data/training_data_feature.csv"
+sfeature_file = "../data/testining_data_feature.csv"
 
 # 0.(normalization)
 tdata, ttarget, tlabel, sdata, starget = get_scaled_training_and_testing_data()
