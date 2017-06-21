@@ -35,6 +35,7 @@ def get_testing_data():
 		download_data(testing_file_url, testing_file_temp)
 		zf = zipfile.ZipFile(testing_file_temp, "r")
 		zf.extractall("../data/")
+		os.remove(testing_file_temp)
 	df = pd.read_csv(testing_file, sep=' ', header=None)
 	df.columns = ['id', 'data', 'target']
 	
