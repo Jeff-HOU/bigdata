@@ -103,7 +103,7 @@ def scale_one_data_1(d, param=[]):
 		param[0] = np.delete(param[0], (2), axis=1)
 		param[1] = np.delete(param[1], (2), axis=1)
 		param[2] = np.delete(param[2], (2), axis=1)
-		return (d - param[0]) / (param[1] - param[2])
+		return np.divide(d - param[0], param[1] - param[2])
 
 def scale_data(tdata, ttarget, tlabel, sdata, starget):
 	tdata_scaled, param_1 = scale_one_data(tdata)
