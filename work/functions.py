@@ -1,8 +1,18 @@
 import numpy as np
 import pandas as pd
+import os
+import zipfile
+from requests import get
 
 training_file = '../data/dsjtzs_txfz_training.txt'
-testing_file = '../data/dsjtzs_txfz_test.txt'
+testing_file = '../data/dsjtzs_txfz_test1.txt'
+testing_file_temp = "../data/temp.zip"
+testing_file_url = "https://publicqn.saikr.com/b4d50fbf55ed071e2bcdbf6448ee5caa1495681365947.zip?attname=dsjtzs_txfz_test1.txt.zip"
+
+def download_data(url, file_name):
+	with open(file_name, "wb") as file:
+		response = get(url)
+		file.write(response.content)
 
 def get_training_data():
 	df = pd.read_csv(training_file, sep=' ', header=None)
@@ -21,6 +31,10 @@ def get_training_data():
 	return data, target, label
 
 def get_testing_data():
+	if not os.path.exists(testing_file):
+		download_data(testing_file_url, testing_file_temp)
+		zf = zipfile.ZipFile(testing_file_temp, "r")
+		zf.extractall("../data/")
 	df = pd.read_csv(testing_file, sep=' ', header=None)
 	df.columns = ['id', 'data', 'target']
 	
