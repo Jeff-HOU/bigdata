@@ -295,3 +295,22 @@ def sgolay2d ( z, window_size, order, derivative=None):
         c = np.linalg.pinv(A)[1].reshape((window_size, -1))
         r = np.linalg.pinv(A)[2].reshape((window_size, -1))
         return scipy.signal.fftconvolve(Z, -r, mode='valid'), scipy.signal.fftconvolve(Z, -c, mode='valid')
+
+def count_record_num(training_or_testing="t"):
+	if training_or_testing == "t":
+		count = np.zeros((3000,))
+		with open(training_file) as f:
+			i = 0
+			for line in f:
+				parts = line.split(";")
+				count[i] = len(parts) - 1
+		f.close()
+	else:
+		count = np.zeros((100000,))
+		with open(testing_file) as f:
+			i = 0
+			for line in f:
+				parts = line.split(";")
+				count[i] = len(parts) - 1
+		f.close()
+	return count
