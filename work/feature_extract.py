@@ -6,7 +6,7 @@ training_file = '../data/dsjtzs_txfz_training.txt'
 testing_file = '../data/dsjtzs_txfz_test1.txt'
 
 tfeature = np.zeros((3000, 13)) # feature array of training data
-sfeature = np.zeros(100000, 13) # feature array of testing data
+sfeature = np.zeros((100000, 13)) # feature array of testing data
 
 # 0.(normalization)
 utdata, uttarget, utlabel, usdata, ustarget = get_training_and_testing_data() # get unscaled training and testing data
@@ -29,17 +29,33 @@ starget_x = np.delete(starget, [1], axis=1)									  # target's x axis of scale
 # | |             |                     ||
 # 1 0.(x.max-x.min)/(t.max-t.min)
 # 2 1.终点x离目标x距离
+utdata_x_trans=utdata_x[:,:,0]                                                #target's x axis endpoint in shape (3000,300)
+endpoints=[]
+for row in utdata_x_trans:
+	endpoints.append(row[np.nonzero(row)[-1][-1]])							  
+endpoint_x_t = np.array(endpoints)                                              #this shall result in a (1,300) array with the last nonzero index
+endpoint_target_distance=endpoint_x_t-uttarget_x[:,0]               					  #fill the tfeature with unscaled 
+endpoint_target_distance=endpoint_target_distance/(np.max(endpoint_x_t)-np.min(endpoint_x_t))
+tfeature[:,1]=endpoint_target_distance
+
+sdata_x_trans=sdata_x[:,:,0]
+endpoint_x_s=count_record_num("s")-1
+sfeature[:,1]=sdata_x_trans[range(100000),endpoint_x_s]-starget_x[:,0]
+
+
 # 3 2.x.max-x.min
 
 tdata_delta_x = np.max(tdata_x, axis=1) - np.min(tdata_x, axis=1)
 tfeature[:, 2] = tdata_delta_x.reshape((1, 3000))
 
 sdata_delta_x = np.max(sdata_x, axis=1) - np.min(sdata_x, axis=1)
-sfeature[:, 2] = sdata_delta_x.reshape((1, 3000))
+sfeature[:, 2] = sdata_delta_x.reshape((1, 100000))
 
 # 4 3.sigma|x-x0|^2
+
 # 5 4.|xi-xi+1|/|ti-ti+1|
 # 5 5.|xi-xi+1|/|ti-ti+1|^2
+
 # 6 6.停的次数:
 
 tdata_x_no = np.squeeze(tdata_x, axis=2)
