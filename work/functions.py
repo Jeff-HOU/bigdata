@@ -304,7 +304,7 @@ def count_record_num(training_or_testing="t"):
 			for line in f:
 				parts = line.split(";")
 				count[i] = len(parts) - 1
-				i+=1
+				i += 1
 		f.close()
 	else:
 		count = np.zeros((100000,))
@@ -313,6 +313,6 @@ def count_record_num(training_or_testing="t"):
 			for line in f:
 				parts = line.split(";")
 				count[i] = len(parts) - 1
-				i+=1
+				i += 1
 		f.close()
 	return count.astype(int)

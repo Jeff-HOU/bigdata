@@ -73,9 +73,9 @@ for i in range(3000):
 	lt_threshold = 0
 	for j in range(record_num[i] - 2):
 		if tdata_k_tmp[j] > threshold and tdata_k_tmp[j+1] < threshold:
-			++gt_threshold
+			gt_threshold += 1
 		elif tdata_k_tmp[j] < threshold and tdata_k_tmp[j+1] > threshold:
-			++lt_threshold
+			lt_threshold += 1
 	tfeature[i, 6] = min(gt_threshold, lt_threshold)
 
 sdata_x_no = np.squeeze(sdata_x, axis=2)
@@ -93,9 +93,9 @@ for i in range(100000):
 	lt_threshold = 0
 	for j in range(record_num[i] - 2):
 		if sdata_k_tmp[j] > threshold and sdata_k_tmp[j+1] < threshold:
-			++gt_threshold
+			gt_threshold += 1
 		elif sdata_k_tmp[j] < threshold and sdata_k_tmp[j+1] > threshold:
-			++lt_threshold
+			lt_threshold += 1
 	sfeature[i, 6] = min(gt_threshold, lt_threshold)
 
 # 7 7.停时有无波动:
