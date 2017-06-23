@@ -29,18 +29,25 @@ starget_x = np.delete(starget, [1], axis=1)									  # target's x axis of scale
 # | |             |                     ||
 # 1 0.(x.max-x.min)/(t.max-t.min)
 # 2 1.终点x离目标x距离
+
+'''
 utdata_x_trans=utdata_x[:,:,0]                                                #target's x axis endpoint in shape (3000,300)
 endpoints=[]
 for row in utdata_x_trans:
 	endpoints.append(row[np.nonzero(row)[-1][-1]])							  
-endpoint_x_t = np.array(endpoints)                                              #this shall result in a (1,300) array with the last nonzero index
-endpoint_target_distance=endpoint_x_t-uttarget_x[:,0]               					  #fill the tfeature with unscaled 
+endpoint_x_t = np.array(endpoints)                                            #this shall result in a (1,300) array with the last nonzero index
+endpoint_target_distance=endpoint_x_t-uttarget_x[:,0]               		  #fill the tfeature with unscaled 
 endpoint_target_distance=endpoint_target_distance/(np.max(endpoint_x_t)-np.min(endpoint_x_t))
-tfeature[:,1]=endpoint_target_distance
+tfeature[:,1]=endpoint_target_distatnce
+'''
+
+tdata_x_trans=tdata_x[:,:,0]
+endpoint_t=count_record_num("t")-1
+tfeature[:,1]=tdata_x_trans[range(3000),endpoint_t]-ttarget_x[:,0]
 
 sdata_x_trans=sdata_x[:,:,0]
-endpoint_x_s=count_record_num("s")-1
-sfeature[:,1]=sdata_x_trans[range(100000),endpoint_x_s]-starget_x[:,0]
+endpoint_s=count_record_num("s")-1
+sfeature[:,1]=sdata_x_trans[range(100000),endpoint_s]-starget_x[:,0]		  #the result is scaled
 
 
 # 3 2.x.max-x.min
@@ -54,9 +61,23 @@ sfeature[:, 2] = sdata_delta_x.reshape((1, 100000))
 # 4 3.sigma|x-x0|^2
 
 # 5 4.|xi-xi+1|/|ti-ti+1|
-# 5 5.|xi-xi+1|/|ti-ti+1|^2
+tdata_x_diff=np.diff(tdata_x[:,:,0])										  #np.diff calculate the adjacent difference
+tdata_t_diff=np.diff(tdata_t[:,:,0])
+velocity_t=tdata_x_diff/tdata_t_diff										  #result in a number of nan
+tfeature[:,4]=np.sqrt(np.nanmean(velocity_t**2,axis=1))						  #calculate the root mean square of the velocity, exemting the nan
 
-# 6 6.停的次数:
+sdata_x_diff=np.diff(sdata_x[:,:,0])
+sdata_t_diff=np.diff(sdata_t[:,:,0])
+velocity_s=sdata_x_diff/sdata_t_diff
+sfeature[:,4]=np.sqrt(np.nanmean(velocity_s**2,axis=1))
+
+
+# 5 5.|xi-xi+1|/|ti-ti+1|^2
+acceleration_t=velocity_t/tdata_t_diff
+tfeature[:,5]=np.sqrt(np.nanmean(acceleration_t**2,axis=1))
+
+acceleration_s=velocity_s/sdata_t_diff
+sfeature[:,5]=np.sqrt(np.nanmean(acceleration_s**2,axis=1))					 #follows directly from the above velocity
 
 tdata_x_no = np.squeeze(tdata_x, axis=2)
 tdata_x_no1 = np.delete(tdata_x_no, [0], axis=1) # shape: (3000, 299)
@@ -110,6 +131,8 @@ for i in range(100000):
 			lt_threshold += 1
 	sfeature[i, 6] = min(gt_threshold, lt_threshold)
 
+
+# 6 6.停的次数:
 # 7 7.停时有无波动:
 # 8 8.折返距离:
 # 9 9.光滑度
