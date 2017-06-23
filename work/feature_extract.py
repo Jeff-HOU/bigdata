@@ -29,35 +29,58 @@ starget_x = np.delete(starget, [1], axis=1)									  # target's x axis of scale
 # | |             |                     ||
 # 1 0.(x.max-x.min)/(t.max-t.min)
 # 2 1.终点x离目标x距离
+
+'''
 utdata_x_trans=utdata_x[:,:,0]                                                #target's x axis endpoint in shape (3000,300)
 endpoints=[]
 for row in utdata_x_trans:
 	endpoints.append(row[np.nonzero(row)[-1][-1]])							  
-endpoint_x_t = np.array(endpoints)                                              #this shall result in a (1,300) array with the last nonzero index
-endpoint_target_distance=endpoint_x_t-uttarget_x[:,0]               					  #fill the tfeature with unscaled 
+endpoint_x_t = np.array(endpoints)                                            #this shall result in a (1,300) array with the last nonzero index
+endpoint_target_distance=endpoint_x_t-uttarget_x[:,0]               		  #fill the tfeature with unscaled 
 endpoint_target_distance=endpoint_target_distance/(np.max(endpoint_x_t)-np.min(endpoint_x_t))
-tfeature[:,1]=endpoint_target_distance
+tfeature[:,1]=endpoint_target_distatnce
+'''
+
+tdata_x_trans=tdata_x[:,:,0]
+endpoint_t=count_record_num("t")-1
+tfeature[:,1]=tdata_x_trans[range(3000),endpoint_t]-ttarget_x[:,0]
 
 sdata_x_trans=sdata_x[:,:,0]
-endpoint_x_s=count_record_num("s")-1
-sfeature[:,1]=sdata_x_trans[range(100000),endpoint_x_s]-starget_x[:,0]
+endpoint_s=count_record_num("s")-1
+sfeature[:,1]=sdata_x_trans[range(100000),endpoint_s]-starget_x[:,0]		  #the result is scaled
 
 
 # 3 2.x.max-x.min
 
-tdata_delta_x = np.max(tdata_x, axis=1) - np.min(tdata_x, axis=1)
+tdata_delta_x = np.max(utdata_x, axis=1) - np.min(utdata_x, axis=1)
 tfeature[:, 2] = tdata_delta_x.reshape((1, 3000))
 
-sdata_delta_x = np.max(sdata_x, axis=1) - np.min(sdata_x, axis=1)
+sdata_delta_x = np.max(usdata_x, axis=1) - np.min(usdata_x, axis=1)
 sfeature[:, 2] = sdata_delta_x.reshape((1, 100000))
 
 # 4 3.sigma|x-x0|^2
 
 # 5 4.|xi-xi+1|/|ti-ti+1|
+tdata_x_diff=np.diff(tdata_x[:,:,0])										  #np.diff calculate the adjacent difference
+tdata_t_diff=np.diff(tdata_t[:,:,0])
+velocity_t=tdata_x_diff/tdata_t_diff										  #result in a number of nan
+tfeature[:,4]=np.sqrt(np.nanmean(velocity_t**2,axis=1))						  #calculate the root mean square of the velocity, exemting the nan
+
+sdata_x_diff=np.diff(sdata_x[:,:,0])
+sdata_t_diff=np.diff(sdata_t[:,:,0])
+velocity_s=sdata_x_diff/sdata_t_diff
+sfeature[:,4]=np.sqrt(np.nanmean(velocity_s**2,axis=1))
+
+
 # 5 5.|xi-xi+1|/|ti-ti+1|^2
+acceleration_t=velocity_t/tdata_t_diff
+tfeature[:,5]=np.sqrt(np.nanmean(acceleration_t**2,axis=1))
+
+acceleration_s=velocity_s/sdata_t_diff
+sfeature[:,5]=np.sqrt(np.nanmean(acceleration_s**2,axis=1))					 #follows directly from the above velocity
+
 
 # 6 6.停的次数:
-
 tdata_x_no = np.squeeze(tdata_x, axis=2)
 tdata_x_no1 = np.delete(tdata_x_no, [0], axis=1) # shape: (3000, 299)
 tdata_x_non = np.delete(tdata_x_no, [299], axis=1)
@@ -65,16 +88,22 @@ tdata_t_no = np.squeeze(tdata_t, axis=2)
 tdata_t_no1 = np.delete(tdata_t_no, [0], axis=1)
 tdata_t_non = np.delete(tdata_t_no, [299], axis=1)
 tdata_k = np.abs(np.divide(tdata_x_no1 - tdata_x_non, tdata_t_no1 - tdata_t_non))
-threshold = 10e-6
+threshold = 0.1
 record_num = count_record_num(training_or_testing="t")
 for i in range(3000):
 	tdata_k_tmp = tdata_k[i]
 	gt_threshold = 0
 	lt_threshold = 0
-	for j in range(record_num[i] - 2):
+	stop_begin_point = 0
+	for j in range(record_num[i] - 1):
+		if j == 298:
+			break
 		if tdata_k_tmp[j] > threshold and tdata_k_tmp[j+1] < threshold:
 			gt_threshold += 1
+			stop_begin_point = j
 		elif tdata_k_tmp[j] < threshold and tdata_k_tmp[j+1] > threshold:
+			if j == stop_begin_point + 1 and gt_threshold != 0:
+				gt_threshold -= 1
 			lt_threshold += 1
 	tfeature[i, 6] = min(gt_threshold, lt_threshold)
 
@@ -85,19 +114,24 @@ sdata_t_no = np.squeeze(sdata_t, axis=2)
 sdata_t_no1 = np.delete(sdata_t_no, [0], axis=1)
 sdata_t_non = np.delete(sdata_t_no, [299], axis=1)
 sdata_k = np.abs(np.divide(sdata_x_no1 - sdata_x_non, sdata_t_no1 - sdata_t_non))
-threshold = 10e-6
+threshold = 0.1
 record_num = count_record_num(training_or_testing="s")
 for i in range(100000):
 	sdata_k_tmp = sdata_k[i]
 	gt_threshold = 0
 	lt_threshold = 0
-	for j in range(record_num[i] - 2):
+	stop_begin_point = 0
+	for j in range(record_num[i] - 1):
+		if j == 298:
+			break
 		if sdata_k_tmp[j] > threshold and sdata_k_tmp[j+1] < threshold:
 			gt_threshold += 1
+			stop_begin_point = j
 		elif sdata_k_tmp[j] < threshold and sdata_k_tmp[j+1] > threshold:
+			if j == stop_begin_point + 1 and gt_threshold != 0:
+				gt_threshold -= 1
 			lt_threshold += 1
-	sfeature[i, 6] = min(gt_threshold, lt_threshold)
-
+sfeature[i, 6] = min(gt_threshold, lt_threshold)
 # 7 7.停时有无波动:
 # 8 8.折返距离:
 # 9 9.光滑度
