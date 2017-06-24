@@ -23,6 +23,7 @@ ttarget_x = np.delete(ttarget, [1], axis=1)									  # target's x axis of scale
 sdata_x = np.delete(sdata, [1, 2], axis=2)									  # track's x axis of scaled testing data
 sdata_t = np.delete(sdata, [0, 1], axis=2)									  # track's t axis of scaled testing data
 starget_x = np.delete(starget, [1], axis=1)									  # target's x axis of scaled testing data
+
 #-----------------------------------------
 # task_id index_in_tfeature. task_name  ||
 # |  _________|    ______________|      ||
