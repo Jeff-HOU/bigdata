@@ -5,8 +5,8 @@ from functions import get_training_and_testing_data, scale_data, scale_one_data,
 training_file = '../data/dsjtzs_txfz_training.txt'
 testing_file = '../data/dsjtzs_txfz_test1.txt'
 
-tfeature = np.zeros((3000, 13)) # feature array of training data
-sfeature = np.zeros((100000, 13)) # feature array of testing data
+tfeature = np.zeros((3000, 16)) # feature array of training data
+sfeature = np.zeros((100000, 16)) # feature array of testing data
 
 # 0.(normalization)
 utdata, uttarget, utlabel, usdata, ustarget = get_training_and_testing_data() # get unscaled training and testing data
@@ -23,7 +23,6 @@ ttarget_x = np.delete(ttarget, [1], axis=1)									  # target's x axis of scale
 sdata_x = np.delete(sdata, [1, 2], axis=2)									  # track's x axis of scaled testing data
 sdata_t = np.delete(sdata, [0, 1], axis=2)									  # track's t axis of scaled testing data
 starget_x = np.delete(starget, [1], axis=1)									  # target's x axis of scaled testing data
-
 #-----------------------------------------
 # task_id index_in_tfeature. task_name  ||
 # |  _________|    ______________|      ||
@@ -61,24 +60,59 @@ sfeature[:, 2] = sdata_delta_x.reshape((1, 100000))
 
 # 4 3.sigma|x-x0|^2
 
-# 5 4.|xi-xi+1|/|ti-ti+1|
-tdata_x_diff=np.diff(tdata_x[:,:,0])										  #np.diff calculate the adjacent difference
-tdata_t_diff=np.diff(tdata_t[:,:,0])
-velocity_t=tdata_x_diff/tdata_t_diff										  #result in a number of nan
-tfeature[:,4]=np.sqrt(np.nanmean(velocity_t**2,axis=1))						  #calculate the root mean square of the velocity, exemting the nan
+# 5 13 a new feature, depicting how many same time-point that a data possess
+utdata_x_diff=np.diff(utdata_x[:,:,0])										  #np.diff calculate the adjacent difference
+utdata_t_diff=np.diff(utdata_t[:,:,0])
+velocity_t=utdata_x_diff/utdata_t_diff										  #result in a number of nan
+number_of_same_time_t=np.sum((np.isinf(velocity_t)),axis=1)					  # a (3000,) data max is 144, min if 0 there are 574 entries that has same t in total
+#index_of_same_time_t=np.where(number_of_same_time_t>0)
+tfeature[:,13]=number_of_same_time_t
 
-sdata_x_diff=np.diff(sdata_x[:,:,0])
-sdata_t_diff=np.diff(sdata_t[:,:,0])
-velocity_s=sdata_x_diff/sdata_t_diff
-sfeature[:,4]=np.sqrt(np.nanmean(velocity_s**2,axis=1))
+usdata_x_diff=np.diff(usdata_x[:,:,0])										  #np.diff calculate the adjacent difference
+usdata_t_diff=np.diff(usdata_t[:,:,0])
+velocity_s=usdata_x_diff/usdata_t_diff										  #result in a number of nan
+number_of_same_time_s=np.sum((np.isinf(velocity_s)),axis=1)					  # a (10000,) data max is 241, min if 0 there are 14777 entries that has same t in total
+#index_of_same_time_t=np.where(number_of_same_time_t>0)
+sfeature[:,13]=number_of_same_time_s
 
+# 5 14 the mean of velocity
 
-# 5 5.|xi-xi+1|/|ti-ti+1|^2
-acceleration_t=velocity_t/tdata_t_diff
-tfeature[:,5]=np.sqrt(np.nanmean(acceleration_t**2,axis=1))
+velocity_t_copy=np.copy(velocity_t)											
+velocity_t_copy[np.isinf(velocity_t_copy)]=300								  #stipulate that the speed of inf equals 300 for inf
+velocity_t_copy[velocity_t_copy>300]=300
+velocity_t_mean=np.nanmean(np.absolute(velocity_t_copy),axis=1)				  #no scaling because velocity is too big for some, resulting in infinitisimal for the normal one
+tfeature[:,14]=velocity_t_mean												  #/(np.amax(velocity_t_mean)-np.amin(velocity_t_mean)) this i for scaling
 
-acceleration_s=velocity_s/sdata_t_diff
-sfeature[:,5]=np.sqrt(np.nanmean(acceleration_s**2,axis=1))					 #follows directly from the above velocity
+velocity_s_copy=np.copy(velocity_s)
+velocity_s_copy[np.isinf(velocity_s_copy)]=300								  #stipulate that the speed of inf equals 300 for inf
+velocity_s_copy[velocity_s_copy>300]=300									  #a strange case with max 136900 is discovered, probably the t is too small
+velocity_s_mean=np.nanmean(np.absolute(velocity_s_copy),axis=1)				  #no scaling because velocity is too big for some, resulting in infinitisimal for the normal one
+sfeature[:,14]=velocity_s_mean												  #/(np.amax(velocity_s_mean)-np.amin(velocity_s_mean)) this is for scaling
+
+# 5 4. the standard deviation of velocity
+
+velocity_t_std=np.nanstd(velocity_t_copy,axis=1)							  #calculate the root mean square of the velocity
+tfeature[:,4]=velocity_t_std												  #unscaled because the velocity difference is too big, and it is standard deviation anyway
+
+velocity_s_std=np.nanstd(velocity_s_copy,axis=1)
+sfeature[:,4]=velocity_s_std
+
+# 5 15.|xi-xi+1|/|ti-ti+1|^2 mean of acceleration
+
+acceleration_t=velocity_t/utdata_t_diff
+acceleration_t[np.isinf(acceleration_t)]=50
+acceleration_t[acceleration_t>100]=50
+tfeature[:,5]=np.nanmean(np.absolute(acceleration_t),axis=1)
+
+acceleration_s=velocity_s/usdata_t_diff
+acceleration_s[np.isinf(acceleration_s)]=50
+acceleration_s[acceleration_s>100]=50
+sfeature[:,15]=np.nanmean(np.absolute(acceleration_s),axis=1)
+
+#5 5. the standard deviation of accelration
+tfeature[:,5]=np.nanstd(acceleration_t,axis=1)
+sfeature[:,5]=np.nanstd(acceleration_s,axis=1)
+
 
 # 6 6.停的次数:
 tdata_x_no = np.squeeze(tdata_x, axis=2)
@@ -208,18 +242,29 @@ sfeature[:, 10] = ssmooth_x_mse.reshape((1, 100000))
 # 10 11.在x<x0时x不变的所有t的总和
 
 # 11 12. judging the similarity of the line with a straight line
+#        there are two cases, one with a direct line, another with x remaining the same first and then followed by a direct sloping line
+#        Then it is natural to focus on the regression of the direct line only.
+
 count_last_nonezero_t=count_record_num("t")-1
 utdata_t_trans=utdata_t[:,:,0]
+utdata_x_trans=utdata_x[:,:,0]
 utdata_diff_x=utdata_x_trans[:,0]-utdata_x_trans[range(3000),count_last_nonezero_t]
 utdata_diff_t=utdata_t_trans[:,0]-utdata_t_trans[range(3000),count_last_nonezero_t]
 utdata_initial_end_k=utdata_diff_x/utdata_diff_t
-utdate_k_diff_sum=np.nansum(np.absolute(tdata_k-np.asarray(utdata_initial_end_k).reshape(3000,1)),axis=1)
-tfeature[:,12]=np.sqrt(utdate_k_diff_sum)   #since k can be very large, so we use the square root to decrease the difference
+
+utdata_k_diff_sum=np.nansum(np.absolute(tdata_k-np.asarray(utdata_initial_end_k).reshape(3000,1)),axis=1)
+utdata_k_diff=np.sqrt(np.nan_to_num(utdata_k_diff_sum))
+utdata_k_diff[utdata_k_diff>3000]=3000
+tfeature[:,12]=utdata_k_diff   #since k can be very large, so we use the square root to decrease the difference
 
 count_last_nonezero_s=count_record_num("s")-1
 usdata_t_trans=usdata_t[:,:,0]
+usdata_x_trans=usdata_x[:,:,0]
 usdata_diff_x=usdata_x_trans[:,0]-usdata_x_trans[range(100000),count_last_nonezero_s]
 usdata_diff_t=usdata_t_trans[:,0]-usdata_t_trans[range(100000),count_last_nonezero_s]
 usdata_initial_end_k=usdata_diff_x/usdata_diff_t
+
 usdate_k_diff_sum=np.nansum(np.absolute(sdata_k-np.asarray(usdata_initial_end_k).reshape(100000,1)),axis=1)
-sfeature[:,12]=np.sqrt(usdate_k_diff_sum)
+usdata_k_diff=np.sqrt(np.nan_to_num(usdate_k_diff_sum))
+usdata_k_diff[usdata_k_diff>3000]=3000
+sfeature[:,12]=usdata_k_diff
