@@ -2,8 +2,8 @@ import numpy as np
 from functions import get_training_and_testing_data, scale_data, scale_one_data, \
 					  savitzky_golay, count_record_num
 
-training_file = '../data/dsjtzs_txfz_training.txt'
-testing_file = '../data/dsjtzs_txfz_test1.txt'
+# training_file = '../data/dsjtzs_txfz_training.txt'
+# testing_file = '../data/dsjtzs_txfz_test1.txt'
 
 tfeature = np.zeros((3000, 16)) # feature array of training data
 sfeature = np.zeros((100000, 16)) # feature array of testing data
@@ -97,6 +97,7 @@ tfeature[:,4]=velocity_t_std												  #unscaled because the velocity differe
 velocity_s_std=np.nanstd(velocity_s_copy,axis=1)
 sfeature[:,4]=velocity_s_std
 
+
 # 5 15.|xi-xi+1|/|ti-ti+1|^2 mean of acceleration
 
 acceleration_t=velocity_t/utdata_t_diff
@@ -112,7 +113,6 @@ sfeature[:,15]=np.nanmean(np.absolute(acceleration_s),axis=1)
 #5 5. the standard deviation of accelration
 tfeature[:,5]=np.nanstd(acceleration_t,axis=1)
 sfeature[:,5]=np.nanstd(acceleration_s,axis=1)
-
 
 # 6 6.停的次数:
 tdata_x_no = np.squeeze(tdata_x, axis=2)
@@ -268,3 +268,35 @@ usdate_k_diff_sum=np.nansum(np.absolute(sdata_k-np.asarray(usdata_initial_end_k)
 usdata_k_diff=np.sqrt(np.nan_to_num(usdate_k_diff_sum))
 usdata_k_diff[usdata_k_diff>3000]=3000
 sfeature[:,12]=usdata_k_diff
+
+
+##########################################################
+ 
+#              Decision Tree Implementation              #
+
+##########################################################
+
+from sklearn import tree
+tlabel_squeeze = np.squeeze(tlabel, axis=1).astype(int)
+
+clf = tree.DecisionTreeClassifier()
+clf = clf.fit(tfeature, tlabel_squeeze)
+prediction = clf.predict(sfeature)
+np.savetxt('test.out', prediction, fmt='%d', delimiter='\n')
+
+##                     ##
+# 	Visulazition Part   #
+##                     ##
+
+from sklearn.externals.six import StringIO
+import pydot
+dot_data = StringIO()
+tree.export_graphviz(clf, 
+						out_file=dot_data,
+						feature_names=feature_names,
+						class_names=target_names,
+						filled=True,
+						rounded=True,
+						impurity=False)
+graph = pydot.graph_from_dot_data(dot_data.get_value())
+graph.write_pdf("prediction.pdf")
