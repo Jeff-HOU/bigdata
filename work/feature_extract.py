@@ -216,12 +216,12 @@ tdata_s, _ = scale_one_data(utdata_s)
 tsmooth_x = np.abs(tdata_s[:, :, 0] - tdata[:, :, 0])
 tsmooth_x_mse = (tsmooth_x ** 2).mean(axis=1) # SOME NAN AFTER THIS STEP!!!!
 											# SEE LATER IF NEEDS FIXED
-											# np.count_nonzero(~np.isnan((smooth_x_mse)) --> NON-NAN: 2924
+											# np.count_nonzero(~np.isnan((tsmooth_x_mse))) --> NON-NAN: 2924
 tfeature[:, 9] = np.mean(tsmooth_x, axis=1).reshape((1, 3000))
 tfeature[:, 10] = tsmooth_x_mse.reshape((1, 3000))
 
 usdata_s = np.copy(usdata)
-for i in range(3000):
+for i in range(100000):
 	num_of_nonzeros = np.count_nonzero(usdata_s[i, :, 0])
 	window_size = int(np.floor(num_of_nonzeros / 4 + 1))
 	if num_of_nonzeros > 100 and num_of_nonzeros <= 200:
@@ -235,7 +235,7 @@ sdata_s, _ = scale_one_data(usdata_s)
 ssmooth_x = np.abs(sdata_s[:, :, 0] - sdata[:, :, 0])
 ssmooth_x_mse = (ssmooth_x ** 2).mean(axis=1) # SOME NAN AFTER THIS STEP!!!!
 											# SEE LATER IF NEEDS FIXED
-											# np.count_nonzero(~np.isnan((smooth_x_mse)) --> NON-NAN: 2924
+											# np.count_nonzero(~np.isnan((ssmooth_x_mse))) --> NON-NAN: 2924
 sfeature[:, 9] = np.mean(ssmooth_x, axis=1).reshape((1, 100000))
 sfeature[:, 10] = ssmooth_x_mse.reshape((1, 100000))
 
@@ -277,19 +277,32 @@ sfeature[:,12]=usdata_k_diff
 ##########################################################
 
 from sklearn import tree
+from datetime import date
 tlabel_squeeze = np.squeeze(tlabel, axis=1).astype(int)
 
 clf = tree.DecisionTreeClassifier()
 clf = clf.fit(tfeature, tlabel_squeeze)
 prediction = clf.predict(sfeature)
-np.savetxt('test.out', prediction, fmt='%d', delimiter='\n')
+
+num_of_black_samples = 100000 - np.count_nonzero(prediction)
+black_samples = np.zeros(num_of_black_samples)
+j = 0
+k = 1
+for i in range(100000):
+	if prediction[i] == 0:
+		black_samples[j] = k
+		j += 1
+	k += 1
+d = date.today().timetuple()
+fname = 'BDC0539_' + str(d[0]).zfill(4) + str(d[1]).zfill(2) + str(d[2]).zfill(2) + '.txt'
+np.savetxt(fname, black_samples, fmt='%d', delimiter='\n')
 
 ##                     ##
 # 	Visulazition Part   #
 ##                     ##
 
 from sklearn.externals.six import StringIO
-import pydot
+import pydotplus
 dot_data = StringIO()
 tree.export_graphviz(clf, 
 						out_file=dot_data,
@@ -298,5 +311,5 @@ tree.export_graphviz(clf,
 						filled=True,
 						rounded=True,
 						impurity=False)
-graph = pydot.graph_from_dot_data(dot_data.get_value())
+graph = pydotplus.graph_from_dot_data(dot_data.get_value())
 graph.write_pdf("prediction.pdf")

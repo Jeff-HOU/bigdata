@@ -69,14 +69,19 @@ def scale_one_data(d, param=[]):
 		d_min = np.expand_dims(d_min, axis=1)
 		d_min = np.repeat(d_min, [300], axis=1)
 
-		return (d - d_mean) / (d_max - d_min), param
+		d_diff = d_max - d_min
+		np.place(d_diff, d_diff == 0, 1)
+
+		return (d - d_mean) / d_diff, param
 	elif len(np.shape(d)) == 2 and np.shape(d)[1] == 1:
 		return d
 	else:
 		param[0] = np.delete(param[0], (2), axis=1)
 		param[1] = np.delete(param[1], (2), axis=1)
 		param[2] = np.delete(param[2], (2), axis=1)
-		return (d - param[0]) / (param[1] - param[2])
+		param_diff = param[1] - param[2]
+		np.place(param_diff, param_diff == 0, 1)
+		return np.divide(d - param[0], param_diff)
 
 def scale_one_data_1(d, param=[]):
 	if len(np.shape(d)) == 3:
@@ -97,14 +102,19 @@ def scale_one_data_1(d, param=[]):
 		d_min = np.expand_dims(d_min, axis=1)
 		d_min = np.repeat(d_min, [300], axis=1)
 
-		return (d - d_mean) / (d_max - d_min), param
+		d_diff = d_max - d_min
+		np.place(d_diff, d_diff == 0, 1)
+
+		return (d - d_mean) / d_diff, param
 	elif len(np.shape(d)) == 2 and np.shape(d)[1] == 1:
 		return d
 	else:
 		param[0] = np.delete(param[0], (2), axis=1)
 		param[1] = np.delete(param[1], (2), axis=1)
 		param[2] = np.delete(param[2], (2), axis=1)
-		return np.divide(d - param[0], param[1] - param[2])
+		param_diff = param[1] - param[2]
+		np.place(param_diff, param_diff == 0, 1)
+		return np.divide(d - param[0], param_diff)
 
 def scale_data(tdata, ttarget, tlabel, sdata, starget):
 	tdata_scaled, param_1 = scale_one_data(tdata)
