@@ -2,8 +2,8 @@ import numpy as np
 from functions import get_training_and_testing_data, scale_data, scale_one_data, \
 					  savitzky_golay, count_record_num
 
-training_file = '../data/dsjtzs_txfz_training.txt'
-testing_file = '../data/dsjtzs_txfz_test1.txt'
+# training_file = '../data/dsjtzs_txfz_training.txt'
+# testing_file = '../data/dsjtzs_txfz_test1.txt'
 
 tfeature = np.zeros((3000, 13)) # feature array of training data
 sfeature = np.zeros((100000, 13)) # feature array of testing data
@@ -65,20 +65,20 @@ sfeature[:, 2] = sdata_delta_x.reshape((1, 100000))
 tdata_x_diff=np.diff(tdata_x[:,:,0])										  #np.diff calculate the adjacent difference
 tdata_t_diff=np.diff(tdata_t[:,:,0])
 velocity_t=tdata_x_diff/tdata_t_diff										  #result in a number of nan
-tfeature[:,4]=np.sqrt(np.nanmean(velocity_t**2,axis=1))						  #calculate the root mean square of the velocity, exemting the nan
+tfeature[:,4]=np.nan_to_num(np.sqrt(np.nanmean(velocity_t**2,axis=1)))						  #calculate the root mean square of the velocity, exemting the nan
 
 sdata_x_diff=np.diff(sdata_x[:,:,0])
 sdata_t_diff=np.diff(sdata_t[:,:,0])
 velocity_s=sdata_x_diff/sdata_t_diff
-sfeature[:,4]=np.sqrt(np.nanmean(velocity_s**2,axis=1))
+sfeature[:,4]=np.nan_to_num(np.sqrt(np.nanmean(velocity_s**2,axis=1)))
 
 
 # 5 5.|xi-xi+1|/|ti-ti+1|^2
 acceleration_t=velocity_t/tdata_t_diff
-tfeature[:,5]=np.sqrt(np.nanmean(acceleration_t**2,axis=1))
+tfeature[:,5]=np.nan_to_num(np.sqrt(np.nanmean(acceleration_t**2,axis=1)))
 
 acceleration_s=velocity_s/sdata_t_diff
-sfeature[:,5]=np.sqrt(np.nanmean(acceleration_s**2,axis=1))					 #follows directly from the above velocity
+sfeature[:,5]=np.nan_to_num(np.sqrt(np.nanmean(acceleration_s**2,axis=1)))					 #follows directly from the above velocity
 
 # 6 6.停的次数:
 tdata_x_no = np.squeeze(tdata_x, axis=2)
@@ -214,7 +214,7 @@ utdata_diff_x=utdata_x_trans[:,0]-utdata_x_trans[range(3000),count_last_nonezero
 utdata_diff_t=utdata_t_trans[:,0]-utdata_t_trans[range(3000),count_last_nonezero_t]
 utdata_initial_end_k=utdata_diff_x/utdata_diff_t
 utdate_k_diff_sum=np.nansum(np.absolute(tdata_k-np.asarray(utdata_initial_end_k).reshape(3000,1)),axis=1)
-tfeature[:,12]=np.sqrt(utdate_k_diff_sum)   #since k can be very large, so we use the square root to decrease the difference
+tfeature[:,12]=np.sqrt(np.nan_to_num(utdate_k_diff_sum))   #since k can be very large, so we use the square root to decrease the difference
 
 count_last_nonezero_s=count_record_num("s")-1
 usdata_t_trans=usdata_t[:,:,0]
@@ -222,4 +222,45 @@ usdata_diff_x=usdata_x_trans[:,0]-usdata_x_trans[range(100000),count_last_noneze
 usdata_diff_t=usdata_t_trans[:,0]-usdata_t_trans[range(100000),count_last_nonezero_s]
 usdata_initial_end_k=usdata_diff_x/usdata_diff_t
 usdate_k_diff_sum=np.nansum(np.absolute(sdata_k-np.asarray(usdata_initial_end_k).reshape(100000,1)),axis=1)
-sfeature[:,12]=np.sqrt(usdate_k_diff_sum)
+sfeature[:,12]=np.sqrt(np.nan_to_num(usdate_k_diff_sum))
+
+
+
+
+
+
+
+##########################################################
+ 
+#              Decision Tree Implementation              #
+
+##########################################################
+
+from sklearn import tree
+tlabel_squeeze = np.squeeze(tlabel, axis=1).astype(int)
+
+clf = tree.DecisionTreeClassifier()
+clf = clf.fit(tfeature, tlabel_squeeze)
+prediction = clf.predict(sfeature)
+np.savetxt('test.out', prediction, fmt='%d', delimiter='\n')
+
+##                     ##
+#	Visulazition Part   #
+##                     ##
+
+from sklearn.externals.six import StringIO
+import pydot
+dot_data = StringIO()
+tree.export_graphviz(clf, 
+						out_file=dot_data,
+						feature_names=feature_names,
+						class_names=target_names,
+						filled=True,
+						rounded=True,
+						impurity=False)
+graph = pydot.graph_from_dot_data(dot_data.get_value())
+graph.write_pdf("prediction.pdf")
+
+
+
+
