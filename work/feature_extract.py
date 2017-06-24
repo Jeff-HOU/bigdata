@@ -80,6 +80,7 @@ tfeature[:,5]=np.sqrt(np.nanmean(acceleration_t**2,axis=1))
 acceleration_s=velocity_s/sdata_t_diff
 sfeature[:,5]=np.sqrt(np.nanmean(acceleration_s**2,axis=1))					 #follows directly from the above velocity
 
+# 6 6.停的次数:
 tdata_x_no = np.squeeze(tdata_x, axis=2)
 tdata_x_no1 = np.delete(tdata_x_no, [0], axis=1) # shape: (3000, 299)
 tdata_x_non = np.delete(tdata_x_no, [299], axis=1)
@@ -133,9 +134,21 @@ for i in range(100000):
 	sfeature[i, 6] = min(gt_threshold, lt_threshold)
 
 
-# 6 6.停的次数:
 # 7 7.停时有无波动:
+
 # 8 8.折返距离:
+utdata_x_trans=utdata_x[:,:,0]
+utdata_x_route_length=np.sum(np.absolute(utdata_x_trans),1)                         #the overall route length of the mouse
+utdata_x_diff_copy=np.diff(utdata_x_trans).copy()
+utdata_x_diff_copy[utdata_x_diff_copy>0]=0
+tfeature[:,8]=(-np.sum(utdata_x_diff_copy,1))/utdata_x_route_length					#the portion that backward route take up			
+
+usdata_x_trans=usdata_x[:,:,0]
+usdata_x_route_length=np.sum(np.absolute(usdata_x_trans),1)							#the overall route for the test data
+usdata_x_diff_copy=np.diff(usdata_x_trans).copy()
+usdata_x_diff_copy[usdata_x_diff_copy>0]=0
+sfeature[:,8]=(-np.sum(usdata_x_diff_copy,1))/usdata_x_route_length					#the whole thing is positive and naturally scaled
+
 # 9 9.光滑度
 # 9 10.光滑度方差
 '''
@@ -189,8 +202,24 @@ ssmooth_x = np.abs(sdata_s[:, :, 0] - sdata[:, :, 0])
 ssmooth_x_mse = (ssmooth_x ** 2).mean(axis=1) # SOME NAN AFTER THIS STEP!!!!
 											# SEE LATER IF NEEDS FIXED
 											# np.count_nonzero(~np.isnan((smooth_x_mse)) --> NON-NAN: 2924
-sfeature[:, 9] = np.mean(ssmooth_x, axis=1).reshape((1, 3000))
-sfeature[:, 10] = ssmooth_x_mse.reshape((1, 3000))
+sfeature[:, 9] = np.mean(ssmooth_x, axis=1).reshape((1, 100000))
+sfeature[:, 10] = ssmooth_x_mse.reshape((1, 100000))
 
 # 10 11.在x<x0时x不变的所有t的总和
-# 11 12.t
+
+# 11 12. judging the similarity of the line with a straight line
+count_last_nonezero_t=count_record_num("t")-1
+utdata_t_trans=utdata_t[:,:,0]
+utdata_diff_x=utdata_x_trans[:,0]-utdata_x_trans[range(3000),count_last_nonezero_t]
+utdata_diff_t=utdata_t_trans[:,0]-utdata_t_trans[range(3000),count_last_nonezero_t]
+utdata_initial_end_k=utdata_diff_x/utdata_diff_t
+utdate_k_diff_sum=np.nansum(np.absolute(tdata_k-np.asarray(utdata_initial_end_k).reshape(3000,1)),axis=1)
+tfeature[:,12]=np.sqrt(utdate_k_diff_sum)   #since k can be very large, so we use the square root to decrease the difference
+
+count_last_nonezero_s=count_record_num("s")-1
+usdata_t_trans=usdata_t[:,:,0]
+usdata_diff_x=usdata_x_trans[:,0]-usdata_x_trans[range(100000),count_last_nonezero_s]
+usdata_diff_t=usdata_t_trans[:,0]-usdata_t_trans[range(100000),count_last_nonezero_s]
+usdata_initial_end_k=usdata_diff_x/usdata_diff_t
+usdate_k_diff_sum=np.nansum(np.absolute(sdata_k-np.asarray(usdata_initial_end_k).reshape(100000,1)),axis=1)
+sfeature[:,12]=np.sqrt(usdate_k_diff_sum)
