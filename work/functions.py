@@ -5,10 +5,16 @@ import zipfile
 from requests import get
 import scipy
 
+file_folder = "../data"
 training_file = '../data/dsjtzs_txfz_training.txt'
+training_file_temp = '../data/ttemp.zip'
+training_file_url = "https://publicqn.saikr.com/3f96bef8dcbbf57605db3f5e79d5384e1495175270342.zip?attname=dsjtzs_txfz_training.txt.zip"
 testing_file = '../data/dsjtzs_txfz_test1.txt'
-testing_file_temp = "../data/temp.zip"
+testing_file_temp = "../data/stemp.zip"
 testing_file_url = "https://publicqn.saikr.com/b4d50fbf55ed071e2bcdbf6448ee5caa1495681365947.zip?attname=dsjtzs_txfz_test1.txt.zip"
+
+if not os.path.exists(file_folder):
+	os.mkdir(file_folder)
 
 def download_data(url, file_name):
 	with open(file_name, "wb") as file:
@@ -16,6 +22,12 @@ def download_data(url, file_name):
 		file.write(response.content)
 
 def get_training_data():
+	if not os.path.exists(training_file):
+		download_data(training_file_url, training_file_temp)
+		zf = zipfile.ZipFile(training_file_temp, "r")
+		zf.extractall("/tmp/data000/")
+		os.remove(training_file_temp)
+
 	df = pd.read_csv(training_file, sep=' ', header=None)
 	df.columns = ['id', 'data', 'target', 'label']
 	
@@ -37,6 +49,7 @@ def get_testing_data():
 		zf = zipfile.ZipFile(testing_file_temp, "r")
 		zf.extractall("../data/")
 		os.remove(testing_file_temp)
+
 	df = pd.read_csv(testing_file, sep=' ', header=None)
 	df.columns = ['id', 'data', 'target']
 	

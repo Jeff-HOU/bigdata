@@ -1,9 +1,15 @@
 import numpy as np
+import os
 from functions import get_training_and_testing_data, scale_data, scale_one_data, \
 					  savitzky_golay, count_record_num
 
 # training_file = '../data/dsjtzs_txfz_training.txt'
 # testing_file = '../data/dsjtzs_txfz_test1.txt'
+
+var_save_dir = './saved_vars'
+tfeature_save_file = var_save_dir + '/tfeature'
+sfeature_save_file = var_save_dir + '/sfeature'
+tlabel_save_file = var_save_dir + '/tlabel'
 
 tfeature = np.zeros((3000, 16)) # feature array of training data
 sfeature = np.zeros((100000, 16)) # feature array of testing data
@@ -269,47 +275,10 @@ usdata_k_diff=np.sqrt(np.nan_to_num(usdate_k_diff_sum))
 usdata_k_diff[usdata_k_diff>3000]=3000
 sfeature[:,12]=usdata_k_diff
 
+if not os.path.exists(var_save_dir):
+	os.mkdir(var_save_dir)
 
-##########################################################
- 
-#              Decision Tree Implementation              #
+np.save(tfeature_save_file, tfeature)
+np.save(sfeature_save_file, sfeature)
+np.save(tlabel_save_file, tlabel)
 
-##########################################################
-
-from sklearn import tree
-from datetime import date
-tlabel_squeeze = np.squeeze(tlabel, axis=1).astype(int)
-
-clf = tree.DecisionTreeClassifier()
-clf = clf.fit(tfeature, tlabel_squeeze)
-prediction = clf.predict(sfeature)
-
-num_of_black_samples = 100000 - np.count_nonzero(prediction)
-black_samples = np.zeros(num_of_black_samples)
-j = 0
-k = 1
-for i in range(100000):
-	if prediction[i] == 0:
-		black_samples[j] = k
-		j += 1
-	k += 1
-d = date.today().timetuple()
-fname = 'BDC0539_' + str(d[0]).zfill(4) + str(d[1]).zfill(2) + str(d[2]).zfill(2) + '.txt'
-np.savetxt(fname, black_samples, fmt='%d', delimiter='\n')
-
-##                     ##
-# 	Visulazition Part   #
-##                     ##
-
-from sklearn.externals.six import StringIO
-import pydotplus
-dot_data = StringIO()
-tree.export_graphviz(clf, 
-						out_file=dot_data,
-						feature_names=feature_names,
-						class_names=target_names,
-						filled=True,
-						rounded=True,
-						impurity=False)
-graph = pydotplus.graph_from_dot_data(dot_data.get_value())
-graph.write_pdf("prediction.pdf")
