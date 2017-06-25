@@ -31,14 +31,14 @@ def bias_variable(shape):
     return tf.Variable(initial)
 
 n_input = 16
-n_hidden_1 = 6
+n_hidden_1 = 8
 #n_hidden_2 = 75
-n_hidden_3 = 6
+n_hidden_3 = 4
 
 n_classes = labels.shape[1]
 
 learning_rate = 0.003
-training_epochs = 500
+training_epochs = 20
 batch_size = 10
 
 total_batches = tfeature.shape[0] # batch_size
@@ -117,40 +117,8 @@ accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
 saver = tf.train.Saver()
 
 with tf.Session() as session:
-    tf.global_variables_initializer().run()
-    
-    # ------------ 1. Training Autoencoders - Unsupervised Learning ----------- #
-    for epoch in range(training_epochs):
-        epoch_costs = np.empty(0)
-        for b in range(total_batches):
-            offset = (b * batch_size) % (tfeature.shape[0] - batch_size)
-            batch_x = tfeature[offset:(offset + batch_size), :]
-            _, c = session.run([us_optimizer, us_cost_function],feed_dict={X: batch_x})
-            epoch_costs = np.append(epoch_costs,c)
-        print ("Epoch: ",epoch," Loss: ",np.mean(epoch_costs))
-    print ("Unsupervised pre-training finished...")
-    
-    
-    # ---------------- 2. Training NN - Supervised Learning ------------------ #
-    for epoch in range(training_epochs):
-        epoch_costs = np.empty(0)
-        for b in range(total_batches):
-            offset = (b * batch_size) % (train_x.shape[0] - batch_size)
-            batch_x = train_x[offset:(offset + batch_size), :]
-            batch_y = train_y[offset:(offset + batch_size), :]
-            _, c = session.run([s_optimizer, s_cost_function],feed_dict={X: batch_x, Y : batch_y})
-            epoch_costs = np.append(epoch_costs,c)
-        print ("Epoch: ",epoch," Loss: ",np.mean(epoch_costs)," Training Accuracy: ", \
-            session.run(accuracy, feed_dict={X: train_x, Y: train_y}), \
-            "Validation Accuracy:", session.run(accuracy, feed_dict={X: val_x, Y: val_y}))
-            
-    print ("Supervised training finished...")
-    
-    timestr = time.strftime("%Y%m%d-%H%M%S")
-    if not os.path.exists(log_dir):
-        os.mkdir(log_dir)
-    save_path = saver.save(session, log_dir+"/"+timestr+".ckpt")
-    print("Model saved in file: %s" %save_path)
+    saver.restore(session, "./log/20170625-130102.ckpt")
+    print("Model restored.")
     
     prediction=tf.argmax(y_,1)
     predict = prediction.eval(feed_dict={X: sfeature}, session=session)
