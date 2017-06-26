@@ -293,7 +293,7 @@ usdata_t_diff=np.diff(usdata_t[:,:,0])
 x_unchange_flag_s = np.ones(usdata_x_diff.shape)/usdata_x_diff
 bool_same_x_s = np.isinf(x_unchange_flag_s) # inf convert to 1, otherwise 0
 #number_of_same_x_t=np.sum((np.isinf(x_unchange_flag)),axis=1)
-for i in range(3000):
+for i in range(100000):
     sum_time_unchange = 0
     for j in record_num_s[i]-1:
         if bool_same_x_s[i,j,0]==1:
