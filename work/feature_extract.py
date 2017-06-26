@@ -46,7 +46,7 @@ sfeature[:,0]= avg_velocity_s.reshape((1,100000))
 
 
 
-# 2 1.终点x离目标x距离
+# 2 1.
 
 '''
 utdata_x_trans=utdata_x[:,:,0]                                                #target's x axis endpoint in shape (3000,300)
@@ -202,7 +202,26 @@ for i in range(100000):
 	sfeature[i, 6] = min(gt_threshold, lt_threshold)
 
 
-# 7 7.停时有无波动:
+# 7 7.停时有无波动: The continuous 5 x_diff is 0 - mean ratio of No_fluctuate++
+record_num_t = count_record_num(training_or_testing="t")
+utdata_x_diff=np.diff(utdata_x[:,:,0])
+utdata_t_diff=np.diff(utdata_t[:,:,0])
+for i in range(3000):
+	no_fluct_num_t = 0
+	for j in range(record_num_t[i]-6)
+		if (abs(utdata_x_diff[i,j,0]) + abs(utdata_x_diff[i,j+1,0]) + abs(utdata_x_diff[i,j+2,0]) + abs(utdata_x_diff[i,j+3,0]) + abs(utdata_x_diff[i,j+4,0])) == 0 : #all 0
+			no_fluct_num_t = no_fluct_num_t + 1
+	tfeature[i,7] = no_fluct_num_t/(record_num_t[i]-5)
+
+record_num_s = count_record_num(training_or_testing="s")
+usdata_x_diff=np.diff(usdata_x[:,:,0])
+usdata_t_diff=np.diff(usdata_t[:,:,0])
+for i in range(100000):
+	no_fluct_num_s = 0
+	for j in range(record_num_s[i]-6)
+		if (abs(usdata_x_diff[i,j,0]) + abs(usdata_x_diff[i,j+1,0]) + abs(usdata_x_diff[i,j+2,0]) + abs(usdata_x_diff[i,j+3,0]) + abs(usdata_x_diff[i,j+4,0])) == 0 : #all 0
+			no_fluct_num_s = no_fluct_num_s + 1
+	sfeature[i,7] = no_fluct_num_s/(record_num_t[i]-5)
 
 # 8 8.折返距离:
 utdata_x_trans=utdata_x[:,:,0]
@@ -217,8 +236,8 @@ usdata_x_diff_copy=np.diff(usdata_x_trans).copy()
 usdata_x_diff_copy[usdata_x_diff_copy>0]=0
 sfeature[:,8]=(-np.sum(usdata_x_diff_copy,1))/usdata_x_route_length					#the whole thing is positive and naturally scaled
 
-# 9 9.光滑度
-# 9 10.光滑度方差
+# 9 9.
+# 9 10.
 '''
 utdata_xs = np.squeeze(utdata_x, axis=2)
 utdata_ts = np.squeeze(utdata_t, axis=2)
@@ -273,7 +292,7 @@ ssmooth_x_mse = (ssmooth_x ** 2).mean(axis=1) # SOME NAN AFTER THIS STEP!!!!
 sfeature[:, 9] = np.mean(ssmooth_x, axis=1).reshape((1, 100000))
 sfeature[:, 10] = ssmooth_x_mse.reshape((1, 100000))
 
-# 10 11.在x<x0时x不变的所有t的总和 diff && count_inf OR 0/1 mask
+# 10 11.if x<x0, sum of all t_diff when x unchange - diff && count_inf OR 0/1 mask
 record_num_t = count_record_num(training_or_testing="t")
 utdata_x_diff=np.diff(utdata_x[:,:,0])
 utdata_t_diff=np.diff(utdata_t[:,:,0])
@@ -282,8 +301,8 @@ bool_same_x_t = np.isinf(x_unchange_flag_t) # inf convert to 1, otherwise 0
 #number_of_same_x_t=np.sum((np.isinf(x_unchange_flag)),axis=1)
 for i in range(3000):
     sum_time_unchange = 0
-    for j in range(record_num_t[i]-1):
-        if bool_same_x_t[i,j,0]==1:
+    for j in range(record_num_t[i]-2): # shape deducted one after diff
+        if bool_same_x_t[i,j,0]:
             sum_time_unchange = sum_time_unchange + utdata_t_diff[i,j,0]
     tfeature[i,11] = sum_time_unchange
 
@@ -295,8 +314,8 @@ bool_same_x_s = np.isinf(x_unchange_flag_s) # inf convert to 1, otherwise 0
 #number_of_same_x_t=np.sum((np.isinf(x_unchange_flag)),axis=1)
 for i in range(100000):
     sum_time_unchange = 0
-    for j in range(record_num_s[i]-1):
-        if bool_same_x_s[i,j,0]==1:
+    for j in range(record_num_s[i]-2):
+        if bool_same_x_s[i,j,0]:
             sum_time_unchange = sum_time_unchange + usdata_t_diff[i,j,0]
     sfeature[i,11] = sum_time_unchange
 
