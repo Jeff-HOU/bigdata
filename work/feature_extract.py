@@ -298,7 +298,7 @@ for i in range(100000):
     for j in record_num_s[i]-1:
         if bool_same_x_s[i,j,0]==1:
             sum_time_unchange = sum_time_unchange + usdata_t_diff[i,j,0]
-    tfeature[i,11] = sum_time_unchange
+    sfeature[i,11] = sum_time_unchange
 
 # 11 12. judging the similarity of the line with a straight line
 #        there are two cases, one with a direct line, another with x remaining the same first and then followed by a direct sloping line
