@@ -282,7 +282,7 @@ bool_same_x_t = np.isinf(x_unchange_flag_t) # inf convert to 1, otherwise 0
 #number_of_same_x_t=np.sum((np.isinf(x_unchange_flag)),axis=1)
 for i in range(3000):
     sum_time_unchange = 0
-    for j in record_num_t[i]-1:
+    for j in range(record_num_t[i]-1):
         if bool_same_x_t[i,j,0]==1:
             sum_time_unchange = sum_time_unchange + utdata_t_diff[i,j,0]
     tfeature[i,11] = sum_time_unchange
@@ -295,7 +295,7 @@ bool_same_x_s = np.isinf(x_unchange_flag_s) # inf convert to 1, otherwise 0
 #number_of_same_x_t=np.sum((np.isinf(x_unchange_flag)),axis=1)
 for i in range(100000):
     sum_time_unchange = 0
-    for j in record_num_s[i]-1:
+    for j in range(record_num_s[i]-1):
         if bool_same_x_s[i,j,0]==1:
             sum_time_unchange = sum_time_unchange + usdata_t_diff[i,j,0]
     sfeature[i,11] = sum_time_unchange
