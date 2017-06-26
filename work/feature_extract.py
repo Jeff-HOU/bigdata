@@ -34,6 +34,18 @@ starget_x = np.delete(starget, [1], axis=1)									  # target's x axis of scale
 # |  _________|    ______________|      ||
 # | |             |                     ||
 # 1 0.(x.max-x.min)/(t.max-t.min)
+utdata_delta_x = np.max(utdata_x, axis=1) - np.min(utdata_x, axis=1)
+utdata_delta_t = np.max(utdata_t, axis=1) - np.min(utdata_t, axis=1)
+avg_velocity_t = np.divide(utdata_delta_x,utdata_delta_t) # be care of overflow
+tfeature[:,0]= avg_velocity_t.reshape((1,3000))
+
+usdata_delta_x = np.max(usdata_x, axis=1) - np.min(usdata_x, axis=1)
+usdata_delta_t = np.max(usdata_t, axis=1) - np.min(usdata_t, axis=1)
+avg_velocity_s = np.divide(usdata_delta_x,usdata_delta_t) # be care of overflow
+sfeature[:,0]= avg_velocity_s.reshape((1,100000))
+
+
+
 # 2 1.终点x离目标x距离
 
 '''
@@ -64,7 +76,23 @@ tfeature[:, 2] = tdata_delta_x.reshape((1, 3000))
 sdata_delta_x = np.max(usdata_x, axis=1) - np.min(usdata_x, axis=1)
 sfeature[:, 2] = sdata_delta_x.reshape((1, 100000))
 
-# 4 3.sigma|x-x0|^2
+# 4 3. mean of sigma|x-x0|^2
+count_record_tnum = count_record_num(training_or_testing="t")
+for i in range(3000):
+    sigma_ = 0
+    for j in range(count_record_tnum[i]-1):
+        #set x0 to 0 when no data, set x0 to target_x when there is data
+        sigma_ = sigma_ + abs(tdata_x[i, j, 0] - ttarget_x[i,0])**2 # no squeeze
+    tfeature[i, 3] = sigma_/count_record_tnum[i] #mean of sigma
+
+count_record_snum = count_record_num(training_or_testing="s")
+for i in range(100000):
+    sigma_ = 0
+    for j in range(count_record_snum[i]-1):
+        #set x0 to 0 when no data, set x0 to target_x when there is data
+        sigma_ = sigma_ + abs(sdata_x[i, j, 0] - starget_x[i,0])**2 # no squeeze
+    sfeature[i, 3] = sigma_/count_record_snum[i] #mean of sigma
+
 
 # 5 13 a new feature, depicting how many same time-point that a data possess
 utdata_x_diff=np.diff(utdata_x[:,:,0])										  #np.diff calculate the adjacent difference
@@ -245,7 +273,32 @@ ssmooth_x_mse = (ssmooth_x ** 2).mean(axis=1) # SOME NAN AFTER THIS STEP!!!!
 sfeature[:, 9] = np.mean(ssmooth_x, axis=1).reshape((1, 100000))
 sfeature[:, 10] = ssmooth_x_mse.reshape((1, 100000))
 
-# 10 11.在x<x0时x不变的所有t的总和
+# 10 11.在x<x0时x不变的所有t的总和 diff && count_inf OR 0/1 mask
+record_num_t = count_record_num(training_or_testing="t")
+utdata_x_diff=np.diff(utdata_x[:,:,0])
+utdata_t_diff=np.diff(utdata_t[:,:,0])
+x_unchange_flag_t = np.ones(utdata_x_diff.shape)/utdata_x_diff
+bool_same_x_t = np.isinf(x_unchange_flag_t) # inf convert to 1, otherwise 0
+#number_of_same_x_t=np.sum((np.isinf(x_unchange_flag)),axis=1)
+for i in range(3000):
+    sum_time_unchange = 0
+    for j in record_num_t[i]-1:
+        if bool_same_x_t[i,j,0]==1:
+            sum_time_unchange = sum_time_unchange + utdata_t_diff[i,j,0]
+    tfeature[i,11] = sum_time_unchange
+
+record_num_s = count_record_num(training_or_testing="s")
+usdata_x_diff=np.diff(usdata_x[:,:,0])
+usdata_t_diff=np.diff(usdata_t[:,:,0])
+x_unchange_flag_s = np.ones(usdata_x_diff.shape)/usdata_x_diff
+bool_same_x_s = np.isinf(x_unchange_flag_s) # inf convert to 1, otherwise 0
+#number_of_same_x_t=np.sum((np.isinf(x_unchange_flag)),axis=1)
+for i in range(3000):
+    sum_time_unchange = 0
+    for j in record_num_s[i]-1:
+        if bool_same_x_s[i,j,0]==1:
+            sum_time_unchange = sum_time_unchange + usdata_t_diff[i,j,0]
+    tfeature[i,11] = sum_time_unchange
 
 # 11 12. judging the similarity of the line with a straight line
 #        there are two cases, one with a direct line, another with x remaining the same first and then followed by a direct sloping line
