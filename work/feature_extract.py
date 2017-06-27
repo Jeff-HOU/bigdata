@@ -148,7 +148,7 @@ sfeature[:,15]=np.nanmean(np.absolute(acceleration_s),axis=1)
 tfeature[:,5]=np.nanstd(acceleration_t,axis=1)
 sfeature[:,5]=np.nanstd(acceleration_s,axis=1)
 
-# 6 6.停的次数:
+# 6 6.Stop times:
 tdata_x_no = np.squeeze(tdata_x, axis=2)
 tdata_x_no1 = np.delete(tdata_x_no, [0], axis=1) # shape: (3000, 299)
 tdata_x_non = np.delete(tdata_x_no, [299], axis=1)
@@ -202,14 +202,14 @@ for i in range(100000):
 	sfeature[i, 6] = min(gt_threshold, lt_threshold)
 
 
-# 7 7.停时有无波动: The continuous 5 x_diff is 0 - mean ratio of No_fluctuate++
+# 7 7.Any fluctuation when stopping The continuous 5 x_diff is 0 - mean ratio of No_fluctuate++
 record_num_t = count_record_num(training_or_testing="t")
 utdata_x_diff=np.diff(utdata_x[:,:,0])
 utdata_t_diff=np.diff(utdata_t[:,:,0])
 for i in range(3000):
 	no_fluct_num_t = 0
-	for j in range(record_num_t[i]-6)
-		if (abs(utdata_x_diff[i,j,0]) + abs(utdata_x_diff[i,j+1,0]) + abs(utdata_x_diff[i,j+2,0]) + abs(utdata_x_diff[i,j+3,0]) + abs(utdata_x_diff[i,j+4,0])) == 0 : #all 0
+	for j in range(record_num_t[i]-6):
+		if (abs(utdata_x_diff[i,j]) + abs(utdata_x_diff[i,j+1]) + abs(utdata_x_diff[i,j+2]) + abs(utdata_x_diff[i,j+3]) + abs(utdata_x_diff[i,j+4])) == 0 : #all 0
 			no_fluct_num_t = no_fluct_num_t + 1
 	tfeature[i,7] = no_fluct_num_t/(record_num_t[i]-5)
 
@@ -218,12 +218,12 @@ usdata_x_diff=np.diff(usdata_x[:,:,0])
 usdata_t_diff=np.diff(usdata_t[:,:,0])
 for i in range(100000):
 	no_fluct_num_s = 0
-	for j in range(record_num_s[i]-6)
-		if (abs(usdata_x_diff[i,j,0]) + abs(usdata_x_diff[i,j+1,0]) + abs(usdata_x_diff[i,j+2,0]) + abs(usdata_x_diff[i,j+3,0]) + abs(usdata_x_diff[i,j+4,0])) == 0 : #all 0
+	for j in range(record_num_s[i]-6):
+		if (abs(usdata_x_diff[i,j]) + abs(usdata_x_diff[i,j+1]) + abs(usdata_x_diff[i,j+2]) + abs(usdata_x_diff[i,j+3]) + abs(usdata_x_diff[i,j+4])) == 0 : #all 0
 			no_fluct_num_s = no_fluct_num_s + 1
-	sfeature[i,7] = no_fluct_num_s/(record_num_t[i]-5)
+	sfeature[i,7] = no_fluct_num_s/(record_num_s[i]-5)
 
-# 8 8.折返距离:
+# 8 8.Back distance:
 utdata_x_trans=utdata_x[:,:,0]
 utdata_x_route_length=np.sum(np.absolute(utdata_x_trans),1)                         #the overall route length of the mouse
 utdata_x_diff_copy=np.diff(utdata_x_trans).copy()
@@ -302,8 +302,8 @@ bool_same_x_t = np.isinf(x_unchange_flag_t) # inf convert to 1, otherwise 0
 for i in range(3000):
     sum_time_unchange = 0
     for j in range(record_num_t[i]-2): # shape deducted one after diff
-        if bool_same_x_t[i,j,0]:
-            sum_time_unchange = sum_time_unchange + utdata_t_diff[i,j,0]
+        if bool_same_x_t[i,j]:
+            sum_time_unchange = sum_time_unchange + utdata_t_diff[i,j]
     tfeature[i,11] = sum_time_unchange
 
 record_num_s = count_record_num(training_or_testing="s")
@@ -315,8 +315,8 @@ bool_same_x_s = np.isinf(x_unchange_flag_s) # inf convert to 1, otherwise 0
 for i in range(100000):
     sum_time_unchange = 0
     for j in range(record_num_s[i]-2):
-        if bool_same_x_s[i,j,0]:
-            sum_time_unchange = sum_time_unchange + usdata_t_diff[i,j,0]
+        if bool_same_x_s[i,j]:
+            sum_time_unchange = sum_time_unchange + usdata_t_diff[i,j]
     sfeature[i,11] = sum_time_unchange
 
 # 11 12. judging the similarity of the line with a straight line
