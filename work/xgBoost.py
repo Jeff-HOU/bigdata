@@ -1,6 +1,6 @@
 import numpy as np
 from xgboost import XGBClassifier
-
+from datetime import date
 var_save_dir = './saved_vars'
 tfeature_save_file = var_save_dir + '/tfeature.npy'
 sfeature_save_file = var_save_dir + '/sfeature.npy'

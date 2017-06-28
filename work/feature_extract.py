@@ -34,6 +34,8 @@ starget_x = np.delete(starget, [1], axis=1)									  # target's x axis of scale
 # |  _________|    ______________|      ||
 # | |             |                     ||
 # 1 0.(x.max-x.min)/(t.max-t.min)
+## TODO: WHAT IS THIS????
+
 utdata_delta_x = np.max(utdata_x, axis=1) - np.min(utdata_x, axis=1)
 utdata_delta_t = np.max(utdata_t, axis=1) - np.min(utdata_t, axis=1)
 avg_velocity_t = np.divide(utdata_delta_x,utdata_delta_t) # be care of overflow
@@ -44,9 +46,7 @@ usdata_delta_t = np.max(usdata_t, axis=1) - np.min(usdata_t, axis=1)
 avg_velocity_s = np.divide(usdata_delta_x,usdata_delta_t) # be care of overflow
 sfeature[:,0]= avg_velocity_s.reshape((1,100000))
 
-
-
-# 2 1.
+# 2 1. x.end - x0
 
 '''
 utdata_x_trans=utdata_x[:,:,0]                                                #target's x axis endpoint in shape (3000,300)
