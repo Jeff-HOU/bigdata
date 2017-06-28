@@ -14,21 +14,57 @@ tlabel_save_file = var_save_dir + '/tlabel'
 tfeature = np.zeros((3000, 16)) # feature array of training data
 sfeature = np.zeros((100000, 16)) # feature array of testing data
 
-# 0.(normalization)
-utdata, uttarget, utlabel, usdata, ustarget = get_training_and_testing_data() # get unscaled training and testing data
+data_save_dir = './saved_data'
+utdata_save_file = data_save_dir + '/utdata'
+uttarget_save_file = data_save_dir + '/uttarget'
+utlabel_save_file = data_save_dir + '/utlabel'
+usdata_save_file = data_save_dir + '/usdata'
+ustarget_save_file = data_save_dir + '/ustarget'
+tdata_save_file = data_save_dir + '/tdata'
+ttarget_save_file = data_save_dir + '/ttarget'
+tlabel_save_file = data_save_dir + '/tlabel'
+sdata_save_file = data_save_dir + '/sdata'
+starget_save_file = data_save_dir + '/starget'
+
+if not os.path.exists(data_save_dir):
+	os.mkdir(data_save_dir)
+	utdata, uttarget, utlabel, usdata, ustarget = get_training_and_testing_data() # get unscaled training and testing data
+	tdata, ttarget, tlabel, sdata, starget = scale_data(utdata, uttarget, utlabel, usdata, ustarget) # scale the data
+	np.save(utdata_save_file, utdata)
+	np.save(uttarget_save_file, uttarget)
+	np.save(utlabel_save_file, utlabel)
+	np.save(usdata_save_file, usdata)
+	np.save(ustarget_save_file, ustarget)
+	np.save(tdata_save_file, tdata)
+	np.save(ttarget_save_file, ttarget)
+	np.save(tlabel_save_file, tlabel)
+	np.save(sdata_save_file, sdata)
+	np.save(starget_save_file, starget)
+else:
+	utdata = np.load(utdata_save_file + '.npy')
+	uttarget = np.load(uttarget_save_file + '.npy')
+	utlabel = np.load(utlabel_save_file + '.npy')
+	usdata = np.load(usdata_save_file + '.npy')
+	ustarget = np.load(ustarget_save_file + '.npy')
+	tdata = np.load(tdata_save_file + '.npy')
+	ttarget = np.load(ttarget_save_file + '.npy')
+	tlabel = np.load(tlabel_save_file + '.npy')
+	sdata = np.load(sdata_save_file + '.npy')
+	starget = np.load(starget_save_file + '.npy')
+
 utdata_x = np.delete(utdata, [1, 2], axis=2)								  # track's x axis of unscaled training data shape: (3000, 300, 1)
 utdata_t = np.delete(utdata, [0, 1], axis=2)								  # track's t axis of unscaled training data
 uttarget_x = np.delete(uttarget, [1], axis=1)								  # target's x axis of unscaled training data
 usdata_x = np.delete(usdata, [1, 2], axis=2)								  # track's x axis of unscaled testing data
 usdata_t = np.delete(usdata, [0, 1], axis=2)								  # track's t axis of unscaled testing data
 ustarget_x = np.delete(ustarget, [1], axis=1)								  # target's x axis of unscaled testing data
-tdata, ttarget, tlabel, sdata, starget = scale_data(utdata, uttarget, utlabel, usdata, ustarget) # scale the data
 tdata_x = np.delete(tdata, [1, 2], axis=2)									  # track's x axis of scaled training data
 tdata_t = np.delete(tdata, [0, 1], axis=2)									  # track's t axis of scaled training data
 ttarget_x = np.delete(ttarget, [1], axis=1)									  # target's x axis of scaled training data
 sdata_x = np.delete(sdata, [1, 2], axis=2)									  # track's x axis of scaled testing data
 sdata_t = np.delete(sdata, [0, 1], axis=2)									  # track's t axis of scaled testing data
 starget_x = np.delete(starget, [1], axis=1)									  # target's x axis of scaled testing data
+
 #-----------------------------------------
 # task_id index_in_tfeature. task_name  ||
 # |  _________|    ______________|      ||
@@ -79,19 +115,19 @@ sfeature[:, 2] = sdata_delta_x.reshape((1, 100000))
 # 4 3. mean of sigma|x-x0|^2
 count_record_tnum = count_record_num(training_or_testing="t")
 for i in range(3000):
-    sigma_ = 0
-    for j in range(count_record_tnum[i]-1):
-        #set x0 to 0 when no data, set x0 to target_x when there is data
-        sigma_ = sigma_ + abs(tdata_x[i, j, 0] - ttarget_x[i,0])**2 # no squeeze
-    tfeature[i, 3] = sigma_/count_record_tnum[i] #mean of sigma
+	sigma_ = 0
+	for j in range(count_record_tnum[i]-1):
+		#set x0 to 0 when no data, set x0 to target_x when there is data
+		sigma_ = sigma_ + abs(tdata_x[i, j, 0] - ttarget_x[i,0])**2 # no squeeze
+	tfeature[i, 3] = sigma_/count_record_tnum[i] #mean of sigma
 
 count_record_snum = count_record_num(training_or_testing="s")
 for i in range(100000):
-    sigma_ = 0
-    for j in range(count_record_snum[i]-1):
-        #set x0 to 0 when no data, set x0 to target_x when there is data
-        sigma_ = sigma_ + abs(sdata_x[i, j, 0] - starget_x[i,0])**2 # no squeeze
-    sfeature[i, 3] = sigma_/count_record_snum[i] #mean of sigma
+	sigma_ = 0
+	for j in range(count_record_snum[i]-1):
+		#set x0 to 0 when no data, set x0 to target_x when there is data
+		sigma_ = sigma_ + abs(sdata_x[i, j, 0] - starget_x[i,0])**2 # no squeeze
+	sfeature[i, 3] = sigma_/count_record_snum[i] #mean of sigma
 
 
 # 5 13 a new feature, depicting how many same time-point that a data possess
@@ -210,11 +246,11 @@ tdata_k_initial = tdata_x_diff/tdata_t_diff
 tdata_k = np.nan_to_num(tdata_k_initial) #change nan to zero(x and t not change so treat it as no fluctuation)
 for i in range(3000):
 	no_fluct_num_t = 0
-    if record_num_t[i] < 5: #avoid NaN
-        tfeature[i,7] = 0
-        continue
-	for j in range(record_num_t[i]/5):
-        if (abs(tdata_k[i,j]) + abs(tdata_k[i,j+1]) + abs(tdata_k[i,j+2]) + abs(tdata_k[i,j+3]) + abs(tdata_k[i,j+4])) == 0 : #all 0 - the threshold waits for tuning
+	if record_num_t[i] < 5: #avoid NaN
+		tfeature[i,7] = 0
+		continue
+	for j in range(np.floor(record_num_t[i]/5).astype(int)):
+		if (abs(tdata_k[i,j]) + abs(tdata_k[i,j+1]) + abs(tdata_k[i,j+2]) + abs(tdata_k[i,j+3]) + abs(tdata_k[i,j+4])) == 0 : #all 0 - the threshold waits for tuning
 			no_fluct_num_t = no_fluct_num_t + 1
 	tfeature[i,7] = no_fluct_num_t/(record_num_t[i]/5)
 
@@ -224,14 +260,14 @@ sdata_t_diff=np.diff(sdata_t[:,:,0])
 sdata_k_initial = sdata_x_diff/sdata_t_diff
 sdata_k = np.nan_to_num(sdata_k_initial) #change nan to zero(x and t not change so treat it as no fluctuation)
 for i in range(100000):
-    no_fluct_num_s = 0
-    if record_num_s[i] < 5: #avoid NaN
-        sfeature[i,7] = 0
-        continue
-        for j in range(record_num_s[i]/5):
-        if (abs(sdata_k[i,j]) + abs(sdata_k[i,j+1]) + abs(sdata_k[i,j+2]) + abs(sdata_k[i,j+3]) + abs(sdata_k[i,j+4])) == 0 : #all 0 - the threshold waits for tuning
-            no_fluct_num_s = no_fluct_num_s + 1
-        sfeature[i,7] = no_fluct_num_s/(record_num_s[i]/5)
+	no_fluct_num_s = 0
+	if record_num_s[i] < 5: #avoid NaN
+		sfeature[i,7] = 0
+		continue
+	for j in range(np.floor(record_num_s[i]/5).astype(int)):
+		if (abs(sdata_k[i,j]) + abs(sdata_k[i,j+1]) + abs(sdata_k[i,j+2]) + abs(sdata_k[i,j+3]) + abs(sdata_k[i,j+4])) == 0 : #all 0 - the threshold waits for tuning
+			no_fluct_num_s = no_fluct_num_s + 1
+	sfeature[i,7] = no_fluct_num_s/(record_num_s[i]/5)
 
 
 #record_num_t = count_record_num(training_or_testing="t")
@@ -337,11 +373,11 @@ x_unchange_flag_t = np.ones(utdata_x_diff.shape)/utdata_x_diff
 bool_same_x_t = np.isinf(x_unchange_flag_t) # inf convert to 1, otherwise 0
 #number_of_same_x_t=np.sum((np.isinf(x_unchange_flag)),axis=1)
 for i in range(3000):
-    sum_time_unchange = 0
-    for j in range(record_num_t[i]-2): # shape deducted one after diff
-        if bool_same_x_t[i,j]==1 and utdata_x[i,j,0] < uttarget_x[i,0]: #x<x0
-            sum_time_unchange = sum_time_unchange + utdata_t_diff[i,j]
-    tfeature[i,11] = sum_time_unchange
+	sum_time_unchange = 0
+	for j in range(record_num_t[i]-2): # shape deducted one after diff
+		if bool_same_x_t[i,j]==1 and utdata_x[i,j,0] < uttarget_x[i,0]: #x<x0
+			sum_time_unchange = sum_time_unchange + utdata_t_diff[i,j]
+	tfeature[i,11] = sum_time_unchange
 
 record_num_s = count_record_num(training_or_testing="s")
 usdata_x_diff=np.diff(usdata_x[:,:,0])
@@ -350,11 +386,11 @@ x_unchange_flag_s = np.ones(usdata_x_diff.shape)/usdata_x_diff
 bool_same_x_s = np.isinf(x_unchange_flag_s) # inf convert to 1, otherwise 0
 #number_of_same_x_t=np.sum((np.isinf(x_unchange_flag)),axis=1)
 for i in range(100000):
-    sum_time_unchange = 0
-    for j in range(record_num_s[i]-2):
-        if bool_same_x_s[i,j]==1 and usdata_x[i,j,0] < ustarget_x[i,0]:
-            sum_time_unchange = sum_time_unchange + usdata_t_diff[i,j]
-    sfeature[i,11] = sum_time_unchange
+	sum_time_unchange = 0
+	for j in range(record_num_s[i]-2):
+		if bool_same_x_s[i,j]==1 and usdata_x[i,j,0] < ustarget_x[i,0]:
+			sum_time_unchange = sum_time_unchange + usdata_t_diff[i,j]
+	sfeature[i,11] = sum_time_unchange
 
 # 11 12. judging the similarity of the line with a straight line
 #        there are two cases, one with a direct line, another with x remaining the same first and then followed by a direct sloping line
