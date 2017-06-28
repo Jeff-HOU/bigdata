@@ -202,26 +202,63 @@ for i in range(100000):
 	sfeature[i, 6] = min(gt_threshold, lt_threshold)
 
 
-# 7 7.Any fluctuation when stopping The continuous 5 x_diff is 0 - mean ratio of No_fluctuate++
+# 7 7.Any fluctuation when stopping The continuous 5 x_diff is 0: mean ratio of no_fluct_num++ OR fluctuation of slope
 record_num_t = count_record_num(training_or_testing="t")
-utdata_x_diff=np.diff(utdata_x[:,:,0])
-utdata_t_diff=np.diff(utdata_t[:,:,0])
+tdata_x_diff=np.diff(tdata_x[:,:,0])
+tdata_t_diff=np.diff(tdata_t[:,:,0])
+tdata_k_initial = tdata_x_diff/tdata_t_diff
+tdata_k = np.nan_to_num(tdata_k_initial) #change nan to zero(x and t not change so treat it as no fluctuation)
 for i in range(3000):
 	no_fluct_num_t = 0
-	for j in range(record_num_t[i]-6):
-		if (abs(utdata_x_diff[i,j]) + abs(utdata_x_diff[i,j+1]) + abs(utdata_x_diff[i,j+2]) + abs(utdata_x_diff[i,j+3]) + abs(utdata_x_diff[i,j+4])) == 0 : #all 0
+    if record_num_t[i] < 5: #avoid NaN
+        tfeature[i,7] = 0
+        continue
+	for j in range(record_num_t[i]/5):
+        if (abs(tdata_k[i,j]) + abs(tdata_k[i,j+1]) + abs(tdata_k[i,j+2]) + abs(tdata_k[i,j+3]) + abs(tdata_k[i,j+4])) == 0 : #all 0 - the threshold waits for tuning
 			no_fluct_num_t = no_fluct_num_t + 1
-	tfeature[i,7] = no_fluct_num_t/(record_num_t[i]-5)
+	tfeature[i,7] = no_fluct_num_t/(record_num_t[i]/5)
 
 record_num_s = count_record_num(training_or_testing="s")
-usdata_x_diff=np.diff(usdata_x[:,:,0])
-usdata_t_diff=np.diff(usdata_t[:,:,0])
+sdata_x_diff=np.diff(sdata_x[:,:,0])
+sdata_t_diff=np.diff(sdata_t[:,:,0])
+sdata_k_initial = sdata_x_diff/sdata_t_diff
+sdata_k = np.nan_to_num(sdata_k_initial) #change nan to zero(x and t not change so treat it as no fluctuation)
 for i in range(100000):
-	no_fluct_num_s = 0
-	for j in range(record_num_s[i]-6):
-		if (abs(usdata_x_diff[i,j]) + abs(usdata_x_diff[i,j+1]) + abs(usdata_x_diff[i,j+2]) + abs(usdata_x_diff[i,j+3]) + abs(usdata_x_diff[i,j+4])) == 0 : #all 0
-			no_fluct_num_s = no_fluct_num_s + 1
-	sfeature[i,7] = no_fluct_num_s/(record_num_s[i]-5)
+    no_fluct_num_s = 0
+    if record_num_s[i] < 5: #avoid NaN
+        sfeature[i,7] = 0
+        continue
+        for j in range(record_num_s[i]/5):
+        if (abs(sdata_k[i,j]) + abs(sdata_k[i,j+1]) + abs(sdata_k[i,j+2]) + abs(sdata_k[i,j+3]) + abs(sdata_k[i,j+4])) == 0 : #all 0 - the threshold waits for tuning
+            no_fluct_num_s = no_fluct_num_s + 1
+        sfeature[i,7] = no_fluct_num_s/(record_num_s[i]/5)
+
+
+#record_num_t = count_record_num(training_or_testing="t")
+#tdata_x_diff=np.diff(tdata_x[:,:,0])
+#tdata_t_diff=np.diff(tdata_t[:,:,0])
+#for i in range(3000):
+#	no_fluct_num_t = 0
+#    if record_num_t[i] < 5: #avoid NaN
+#        tfeature[i,7] = 0
+#        continue
+#	for j in range(record_num_t[i]-5):
+#        if (abs(tdata_x_diff[i,j]) + abs(tdata_x_diff[i,j+1]) + abs(tdata_x_diff[i,j+2]) + abs(tdata_x_diff[i,j+3]) + abs(tdata_x_diff[i,j+4])) == 0 : #all 0 - the threshold waits for tuning
+#			no_fluct_num_t = no_fluct_num_t + 1
+#	tfeature[i,7] = no_fluct_num_t/(record_num_t[i]-5)
+#
+#record_num_s = count_record_num(training_or_testing="s")
+#sdata_x_diff=np.diff(sdata_x[:,:,0])
+#sdata_t_diff=np.diff(sdata_t[:,:,0])
+#for i in range(100000):
+#	no_fluct_num_s = 0
+#    if record_num_s[i] < 5:
+#        sfeature[i,7] = 0
+#        continue
+#	for j in range(record_num_s[i]-5):
+#		if (abs(sdata_x_diff[i,j]) + abs(sdata_x_diff[i,j+1]) + abs(sdata_x_diff[i,j+2]) + abs(sdata_x_diff[i,j+3]) + abs(sdata_x_diff[i,j+4])) == 0 : #all 0
+#			no_fluct_num_s = no_fluct_num_s + 1
+#	sfeature[i,7] = no_fluct_num_s/(record_num_s[i]-5)
 
 # 8 8.Back distance:
 utdata_x_trans=utdata_x[:,:,0]
@@ -302,7 +339,7 @@ bool_same_x_t = np.isinf(x_unchange_flag_t) # inf convert to 1, otherwise 0
 for i in range(3000):
     sum_time_unchange = 0
     for j in range(record_num_t[i]-2): # shape deducted one after diff
-        if bool_same_x_t[i,j]:
+        if bool_same_x_t[i,j]==1 and utdata_x[i,j,0] < uttarget_x[i,0]: #x<x0
             sum_time_unchange = sum_time_unchange + utdata_t_diff[i,j]
     tfeature[i,11] = sum_time_unchange
 
@@ -315,7 +352,7 @@ bool_same_x_s = np.isinf(x_unchange_flag_s) # inf convert to 1, otherwise 0
 for i in range(100000):
     sum_time_unchange = 0
     for j in range(record_num_s[i]-2):
-        if bool_same_x_s[i,j]:
+        if bool_same_x_s[i,j]==1 and usdata_x[i,j,0] < ustarget_x[i,0]:
             sum_time_unchange = sum_time_unchange + usdata_t_diff[i,j]
     sfeature[i,11] = sum_time_unchange
 
