@@ -1,6 +1,7 @@
 import numpy as np
 from xgboost import XGBClassifier
 from datetime import date
+from sklearn.grid_search import GridSearchCV
 var_save_dir = './saved_vars'
 tfeature_save_file = var_save_dir + '/tfeature.npy'
 sfeature_save_file = var_save_dir + '/sfeature.npy'
@@ -10,7 +11,7 @@ tfeature = np.load(tfeature_save_file)
 sfeature = np.load(sfeature_save_file)
 tlabel = np.load(tlabel_save_file)
 
-model = XGBClassifier()
+model = XGBClassifier(min_child_weight=12, subsample=0.5, colsample_bytree=0.8, eta=0.1)
 model.fit(tfeature, tlabel)
 prediction = model.predict(sfeature).astype(int)
 

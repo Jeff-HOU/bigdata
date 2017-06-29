@@ -112,7 +112,7 @@ endpoint_target_distance=endpoint_x_t-uttarget_x[:,0]               		  #fill th
 endpoint_target_distance=endpoint_target_distance/(np.max(endpoint_x_t)-np.min(endpoint_x_t))
 tfeature[:,1]=endpoint_target_distatnce
 '''
-
+'''
 tdata_x_trans=tdata_x[:,:,0]
 endpoint_t=count_record_num("t")-1
 tfeature[:,1]=tdata_x_trans[range(3000),endpoint_t]-ttarget_x[:,0]
@@ -120,18 +120,18 @@ tfeature[:,1]=tdata_x_trans[range(3000),endpoint_t]-ttarget_x[:,0]
 sdata_x_trans=sdata_x[:,:,0]
 endpoint_s=count_record_num("s")-1
 sfeature[:,1]=sdata_x_trans[range(100000),endpoint_s]-starget_x[:,0]		  #the result is scaled
-
+'''
 
 # 3 2.x.max-x.min
-'''
+
 tdata_delta_x = np.max(utdata_x, axis=1) - np.min(utdata_x, axis=1)
 tfeature[:, 2] = tdata_delta_x.reshape((1, 3000))
 
 sdata_delta_x = np.max(usdata_x, axis=1) - np.min(usdata_x, axis=1)
 sfeature[:, 2] = sdata_delta_x.reshape((1, 100000))
-'''
+
 # 4 3. mean of sigma|x-x0|^2
-'''
+
 count_record_tnum = count_record_num(training_or_testing="t")
 for i in range(3000):
 	sigma_ = 0
@@ -147,7 +147,7 @@ for i in range(100000):
 		#set x0 to 0 when no data, set x0 to target_x when there is data
 		sigma_ = sigma_ + abs(sdata_x[i, j, 0] - starget_x[i,0])**2 # no squeeze
 	sfeature[i, 3] = sigma_/count_record_snum[i] #mean of sigma
-'''
+
 
 # 5 13 a new feature, depicting how many same time-point that a data possess
 
@@ -190,7 +190,7 @@ sfeature[:,4]=velocity_s_std
 
 
 # 5 15.|xi-xi+1|/|ti-ti+1|^2 mean of acceleration
-'''
+
 acceleration_t=velocity_t/utdata_t_diff
 acceleration_t[np.isinf(acceleration_t)]=50
 acceleration_t[acceleration_t>100]=50
@@ -200,12 +200,12 @@ acceleration_s=velocity_s/usdata_t_diff
 acceleration_s[np.isinf(acceleration_s)]=50
 acceleration_s[acceleration_s>100]=50
 sfeature[:,15]=np.nanmean(np.absolute(acceleration_s),axis=1)
-'''
+
 #5 5. the standard deviation of accelration
-'''
+
 tfeature[:,5]=np.nanstd(acceleration_t,axis=1)
 sfeature[:,5]=np.nanstd(acceleration_s,axis=1)
-'''
+
 # 6 6.Stop times:
 tdata_x_no = np.squeeze(tdata_x, axis=2)
 tdata_x_no1 = np.delete(tdata_x_no, [0], axis=1) # shape: (3000, 299)
@@ -261,7 +261,7 @@ for i in range(100000):
 
 
 # 7 7.Any fluctuation when stopping The continuous 5 x_diff is 0: mean ratio of no_fluct_num++ OR fluctuation of slope
-'''
+
 record_num_t = count_record_num(training_or_testing="t")
 tdata_x_diff=np.diff(tdata_x[:,:,0])
 tdata_t_diff=np.diff(tdata_t[:,:,0])
@@ -291,7 +291,7 @@ for i in range(100000):
 		if (abs(sdata_k[i,j]) + abs(sdata_k[i,j+1]) + abs(sdata_k[i,j+2]) + abs(sdata_k[i,j+3]) + abs(sdata_k[i,j+4])) == 0 : #all 0 - the threshold waits for tuning
 			no_fluct_num_s = no_fluct_num_s + 1
 	sfeature[i,7] = no_fluct_num_s/(record_num_s[i]/5)
-'''
+
 
 #record_num_t = count_record_num(training_or_testing="t")
 #tdata_x_diff=np.diff(tdata_x[:,:,0])
@@ -350,7 +350,7 @@ for i in range(3000):
 		poly_size = int(np.floor(num_of_nonzeros / 20 + 5))
 	utdata_xss[i, 0: num_of_nonzeros] = savitzky_golay(utdata_xs[i, 0: num_of_nonzeros], window_size, poly_size)
 '''
-'''
+
 utdata_s = np.copy(utdata)
 for i in range(3000):
 	num_of_nonzeros = np.count_nonzero(utdata_s[i, :, 0])
@@ -388,9 +388,9 @@ ssmooth_x_mse = (ssmooth_x ** 2).mean(axis=1) # SOME NAN AFTER THIS STEP!!!!
 											# np.count_nonzero(~np.isnan((ssmooth_x_mse))) --> NON-NAN: 2924
 sfeature[:, 9] = np.mean(ssmooth_x, axis=1).reshape((1, 100000))
 sfeature[:, 10] = ssmooth_x_mse.reshape((1, 100000))
-'''
+
 # 10 11.if x<x0, sum of all t_diff when x unchange - diff && count_inf OR 0/1 mask
-'''
+
 record_num_t = count_record_num(training_or_testing="t")
 utdata_x_diff=np.diff(utdata_x[:,:,0])
 utdata_t_diff=np.diff(utdata_t[:,:,0])
@@ -416,7 +416,7 @@ for i in range(100000):
 		if bool_same_x_s[i,j]==1 and usdata_x[i,j,0] < ustarget_x[i,0]:
 			sum_time_unchange = sum_time_unchange + usdata_t_diff[i,j]
 	sfeature[i,11] = sum_time_unchange
-'''
+
 # 11 12. judging the similarity of the line with a straight line
 #        there are two cases, one with a direct line, another with x remaining the same first and then followed by a direct sloping line
 #        Then it is natural to focus on the regression of the direct line only.

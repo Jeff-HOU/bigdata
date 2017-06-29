@@ -19,7 +19,7 @@ tlabel = np.load(tlabel_save_file)
 
 tlabel_squeeze = np.squeeze(tlabel, axis=1).astype(int)
 
-clf = tree.DecisionTreeClassifier()
+clf = tree.DecisionTreeClassifier(min_samples_split=10, min_samples_leaf=14)
 clf = clf.fit(tfeature, tlabel_squeeze)
 prediction = clf.predict(sfeature)
 
@@ -37,7 +37,7 @@ fname = '../submit/BDC0539_' + str(d[0]).zfill(4) + str(d[1]).zfill(2) + str(d[2
 np.savetxt(fname, black_samples, fmt='%d', delimiter='\n')
 
 ##                     ##
-# 	Visualization Part   #
+#  Visualization Part   #
 ##                     ##
 
 from sklearn.externals.six import StringIO
