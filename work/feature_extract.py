@@ -156,14 +156,14 @@ utdata_t_diff=np.diff(utdata_t[:,:,0])
 velocity_t=utdata_x_diff/utdata_t_diff										  #result in a number of nan
 number_of_same_time_t=np.sum((np.isinf(velocity_t)),axis=1)					  # a (3000,) data max is 144, min if 0 there are 574 entries that has same t in total
 #index_of_same_time_t=np.where(number_of_same_time_t>0)
-#tfeature[:,13]=number_of_same_time_t
+tfeature[:,13]=number_of_same_time_t
 
 usdata_x_diff=np.diff(usdata_x[:,:,0])										  #np.diff calculate the adjacent difference
 usdata_t_diff=np.diff(usdata_t[:,:,0])
 velocity_s=usdata_x_diff/usdata_t_diff										  #result in a number of nan
 number_of_same_time_s=np.sum((np.isinf(velocity_s)),axis=1)					  # a (10000,) data max is 241, min if 0 there are 14777 entries that has same t in total
 #index_of_same_time_t=np.where(number_of_same_time_t>0)
-#sfeature[:,13]=number_of_same_time_s
+sfeature[:,13]=number_of_same_time_s
 
 # 5 14 the mean of velocity
 
@@ -171,14 +171,14 @@ velocity_t_copy=np.copy(velocity_t)
 velocity_t_copy[np.isinf(velocity_t_copy)]=300								  #stipulate that the speed of inf equals 300 for inf
 velocity_t_copy[velocity_t_copy>300]=300
 velocity_t_mean=np.nanmean(np.absolute(velocity_t_copy),axis=1)				  #no scaling because velocity is too big for some, resulting in infinitisimal for the normal one
-#tfeature[:,14]=velocity_t_mean												  #/(np.amax(velocity_t_mean)-np.amin(velocity_t_mean)) this i for scaling
+tfeature[:,14]=velocity_t_mean												  #/(np.amax(velocity_t_mean)-np.amin(velocity_t_mean)) this i for scaling
 
 velocity_s_copy=np.copy(velocity_s)
 velocity_s_copy[np.isinf(velocity_s_copy)]=300								  #stipulate that the speed of inf equals 300 for inf
 velocity_s_copy[velocity_s_copy>300]=300									  #a strange case with max 136900 is discovered, probably the t is too small
 velocity_s_mean=np.nanmean(np.absolute(velocity_s_copy),axis=1)				  #no scaling because velocity is too big for some, resulting in infinitisimal for the normal one
 
-#sfeature[:,14]=velocity_s_mean												  #/(np.amax(velocity_s_mean)-np.amin(velocity_s_mean)) this is for scaling
+sfeature[:,14]=velocity_s_mean												  #/(np.amax(velocity_s_mean)-np.amin(velocity_s_mean)) this is for scaling
 
 # 5 4. the standard deviation of velocity
 

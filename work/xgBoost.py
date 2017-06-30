@@ -11,7 +11,7 @@ tfeature = np.load(tfeature_save_file)
 sfeature = np.load(sfeature_save_file)
 tlabel = np.load(tlabel_save_file)
 
-model = XGBClassifier(min_child_weight=12, subsample=0.5, colsample_bytree=0.8, eta=0.1)
+model = XGBClassifier(min_child_weight=12, subsample=0.5, colsample_bytree=0.8)
 model.fit(tfeature, tlabel)
 prediction = model.predict(sfeature).astype(int)
 
