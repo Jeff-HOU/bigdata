@@ -74,10 +74,10 @@ starget_x = np.delete(starget, [1], axis=1)									  # target's x axis of scale
 # 3 2. linear regression, calculate residuals (sum of squared Euclidean 2-norm)
 tmp_t = np.concatenate((tdata_t, np.ones_like(tdata_t)), axis=-1)
 for i in range(tdata_t.shape[0]):
-	tfeature[i, 2] = np.linalg.lstsq(a[i], tdata_x[i])[1]
+	tfeature[i, 2] = np.linalg.lstsq(tmp_t[i], tdata_x[i])[1]
 tmp_s = np.concatenate((sdata_t, np.ones_like(sdata_t)), axis=-1)
 for i in range(sdata_t.shape[0]):
-	sfeature[i, 2] = np.linalg.lstsq(a[i], sdata_x[i])[1]
+	sfeature[i, 2] = np.linalg.lstsq(tmp_s[i], sdata_x[i])[1]
 
 ''' For Visualization, please use the following code instead (set i before you plot):
 a = np.concatenate((tdata_t, np.ones_like(tdata_t)), axis=-1)
@@ -96,6 +96,7 @@ plt.show()
 # end of idea 3
 
 # 4 3. stop times
+
 tdata_x_no = np.squeeze(tdata_x, axis=2)
 tdata_x_no1 = np.delete(tdata_x_no, [0], axis=1) # shape: (3000, 299)
 tdata_x_non = np.delete(tdata_x_no, [299], axis=1)
@@ -147,6 +148,7 @@ for i in range(100000):
 				gt_threshold -= 1
 			lt_threshold += 1
 	sfeature[i, 3] = min(gt_threshold, lt_threshold)
+
 # end of idea 4
 
 if not os.path.exists(var_save_dir):
