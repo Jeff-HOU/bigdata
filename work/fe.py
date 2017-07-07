@@ -71,13 +71,13 @@ starget_x = np.delete(starget, [1], axis=1)									  # target's x axis of scale
 # | |             |                     ||
 # 1 0.
 
-# 2 1. num of absolute delta_x = 0, the back part may contain noise
+# 2 1. num of absolute delta_x = 0, the back part may contain noise, threshold ~= 100
 utdata_x_diff=np.diff(utdata_x[:,:,0])
 record_num_t = count_record_num(training_or_testing="t")
 for i in range(3000):
     num_of_zero_dx = 0
     for j in range(record_num_t[i] - 1):
-        if utdata_x_diff[j] == 0:
+        if utdata_x_diff[i,j] == 0:
             num_of_zero_dx+=1
     tfeature[i, 1] = num_of_zero_dx
 
@@ -86,11 +86,12 @@ record_num_s = count_record_num(training_or_testing="s")
 for i in range(100000):
     num_of_zero_dx = 0
     for j in range(record_num_s[i] - 1):
-        if usdata_x_diff[j] == 0:
+        if usdata_x_diff[i,j] == 0:
             num_of_zero_dx+=1
     sfeature[i, 1] = num_of_zero_dx
 
-#print(tfeature[i,1])
+#np.set_printoptions(threshold=np.nan)
+#print(tfeature[range(2600),1])
 #end of idea 2
 
 # 3 2. linear regression, calculate residuals (sum of squared Euclidean 2-norm)
