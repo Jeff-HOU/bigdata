@@ -69,7 +69,39 @@ starget_x = np.delete(starget, [1], axis=1)									  # target's x axis of scale
 # task_id index_in_tfeature. task_name  ||
 # |  _________|    ______________|      ||
 # | |             |                     ||
-# 1 0.
+# 1 0. he number of increasing acceleration
+utdata_usable=utdata_x[:,:,0]
+utdata_x_diff = np.diff(utdata_x[:,:,0])
+utdata_t_diff = np.diff(utdata_t[:,:,0])
+utdata_acc = utdata_x_diff/utdata_t_diff
+utdata_acc_diff=np.diff(utdata_acc)
+record_num_t_end = count_record_num(training_or_testing="t")
+record_num_t_start=np.zeros((3000,))
+for i in range(3000):
+	record_num_t_start[i]=np.argmax(utdata_usable[i,:]>uttarget_x[i,0])
+range_s=record_num_t_end-record_num_t_start
+for j in range (3000):
+	utdata_acc_diff[j,0:int(record_num_t_start[j])]=0
+	utdata_acc_diff[j,int(record_num_t_end[j]):299]=0
+for z in range (3000):
+	tfeature[z,0]=(utdata_acc_diff[z,:]<0).sum()/range_s[z]
+
+usdata_usable=usdata_x[:,:,0]
+usdata_x_diff = np.diff(usdata_x[:,:,0])
+usdata_t_diff = np.diff(usdata_t[:,:,0])
+usdata_acc = usdata_x_diff/usdata_t_diff
+usdata_acc_diff=np.diff(usdata_acc)
+record_num_s_end = count_record_num(training_or_testing="s")
+record_num_s_start=np.zeros((100000,))
+for i in range(100000):
+	record_num_s_start[i]=np.argmax(usdata_usable[i,:]>ustarget_x[i,0])
+range_s=record_num_s_end-record_num_s_start
+for j in range (100000):
+	usdata_acc_diff[j,0:int(record_num_s_start[j])]=0
+	usdata_acc_diff[j,int(record_num_s_end[j]):99999]=0
+for z in range (100000):
+	sfeature[z,0]=(usdata_acc_diff[z,:]<0).sum()/range_s[z]
+
 
 # 2 1. num of absolute delta_x = 0, the back part may contain noise, threshold ~= 100
 utdata_x_diff=np.diff(utdata_x[:,:,0])
